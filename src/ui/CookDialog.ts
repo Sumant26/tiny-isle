@@ -1,10 +1,35 @@
-import { FISH_IDS, MUSIC_TRACKS, MUSIC_TRACK_IDS, RECIPE_IDS, RECIPES } from '../core/config';
-import type { CropId } from '../core/types';
+import {
+  CONSTELLATIONS,
+  FISH_IDS,
+  HATS,
+  HAT_IDS,
+  MUSIC_TRACKS,
+  MUSIC_TRACK_IDS,
+  OUTFITS,
+  OUTFIT_IDS,
+  PET_ACCESSORIES,
+  PET_ACCESSORY_IDS,
+  PETS,
+  RECIPE_IDS,
+  RECIPES,
+} from '../core/config';
+import type { CropId, PostcardFilter } from '../core/types';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
 import { h } from './dom';
 
-type CottageTab = 'kitchen' | 'hearth' | 'bed' | 'jukebox' | 'books' | 'tidy' | 'tea';
+type CottageTab =
+  | 'kitchen'
+  | 'orders'
+  | 'wardrobe'
+  | 'stargaze'
+  | 'postcards'
+  | 'hearth'
+  | 'bed'
+  | 'jukebox'
+  | 'books'
+  | 'tea'
+  | 'tidy';
 
 export class CookDialog {
   readonly root: HTMLElement;
@@ -26,10 +51,14 @@ export class CookDialog {
       'nav',
       { class: 'cottage-tabs' },
       this.createTabBtn('kitchen', '🍳 Kitchen'),
+      this.createTabBtn('orders', '☕ Farmstand'),
+      this.createTabBtn('wardrobe', '👗 Wardrobe'),
+      this.createTabBtn('stargaze', '🔭 Stargazing'),
+      this.createTabBtn('postcards', '📸 Postcards'),
       this.createTabBtn('bed', '🛏️ Bed'),
-      this.createTabBtn('hearth', '🔥 Fireplace'),
+      this.createTabBtn('hearth', '🔥 Hearth'),
       this.createTabBtn('tea', '🫖 Table & Tea'),
-      this.createTabBtn('books', '📚 Bookshelf'),
+      this.createTabBtn('books', '📚 Almanac'),
       this.createTabBtn('tidy', '🧹 Tidy'),
       this.createTabBtn('jukebox', '🎵 Jukebox'),
     );
@@ -70,6 +99,18 @@ export class CookDialog {
     switch (this.currentTab) {
       case 'kitchen':
         this.renderKitchen();
+        break;
+      case 'orders':
+        this.renderOrders();
+        break;
+      case 'wardrobe':
+        this.renderWardrobe();
+        break;
+      case 'stargaze':
+        this.renderStargaze();
+        break;
+      case 'postcards':
+        this.renderPostcards();
         break;
       case 'hearth':
         this.renderHearth();
@@ -519,6 +560,391 @@ export class CookDialog {
         teaCard,
       ),
     );
+  }
+
+  private renderOrders(): void {
+    const s = this.store.getState();
+    const orders = s.farmstandOrders ?? [];
+    const container = h('div', { class: 'cottage-view orders-view' });
+
+    container.appendChild(
+      h(
+        'p',
+        { class: 'dialog-desc' },
+        'Serve hungry island travelers and islanders visiting your roadside farmstand.',
+      ),
+    );
+
+    // Message in a bottle section
+    if (s.beachBottle && !s.beachBottle.read) {
+      const bottleCard = h(
+        'div',
+        { class: 'recipe-card bottle-card' },
+        h('div', { class: 'recipe-icon' }, '🍾'),
+        h(
+          'div',
+          { class: 'recipe-info' },
+          h('div', { class: 'recipe-title' }, 'Ocean Message in a Bottle'),
+          h('div', { class: 'recipe-desc' }, 'Washed ashore on the shoreline sand!'),
+        ),
+        h(
+          'button',
+          { class: 'primary-btn read-bottle-btn', 'data-testid': 'read-bottle' },
+          'Open & Read 📜',
+        ),
+      );
+
+      bottleCard.querySelector('button')?.addEventListener('click', () => {
+        this.store.dispatch(actions.readBeachBottle());
+        this.renderOrders();
+      });
+      container.appendChild(bottleCard);
+    }
+
+    if (orders.length === 0) {
+      container.appendChild(
+        h(
+          'div',
+          { class: 'empty-notice' },
+          '☕ All current farmstand orders are fulfilled! Check back tomorrow morning.',
+        ),
+      );
+    } else {
+      const ordersList = h('div', { class: 'recipe-list' });
+      orders.forEach((order) => {
+        const hasItem =
+          order.itemType === 'recipe'
+            ? (s.cookedInventory?.[order.item as keyof typeof RECIPES] ?? 0) >= 1
+            : s.inventory.produce[order.item as CropId] >= 1;
+        const count =
+          order.itemType === 'recipe'
+            ? (s.cookedInventory?.[order.item as keyof typeof RECIPES] ?? 0)
+            : s.inventory.produce[order.item as CropId];
+        const countText = `${count}/1 ${order.item.replace('_', ' ')}`;
+
+        const serveBtn = h(
+          'button',
+          {
+            class: `primary-btn serve-btn ${hasItem ? '' : 'disabled'}`,
+            'data-testid': `serve-${order.id}`,
+            disabled: !hasItem,
+          },
+          hasItem ? `Serve (+${order.rewardCoins}🪙)` : 'Need Meal',
+        );
+
+        serveBtn.addEventListener('click', () => {
+          this.store.dispatch(actions.serveFarmstandOrder(order.id));
+          this.renderOrders();
+        });
+
+        const card = h(
+          'div',
+          { class: 'recipe-card' },
+          h('div', { class: 'recipe-icon' }, '☕'),
+          h(
+            'div',
+            { class: 'recipe-info' },
+            h('div', { class: 'recipe-title' }, `${order.customerName}'s Order`),
+            h(
+              'div',
+              { class: 'recipe-desc' },
+              `Wants: ${order.item.replace('_', ' ')} (${countText}) • Reward: ${order.rewardCoins}🪙 +${order.rewardBloom}🌸`,
+            ),
+          ),
+          serveBtn,
+        );
+
+        ordersList.appendChild(card);
+      });
+      container.appendChild(ordersList);
+    }
+
+    this.bodyEl.appendChild(container);
+  }
+
+  private renderWardrobe(): void {
+    const s = this.store.getState();
+    const container = h('div', { class: 'cottage-view wardrobe-view' });
+
+    container.appendChild(
+      h(
+        'p',
+        { class: 'dialog-desc' },
+        'Look into the carved cottage mirror and tailor your farming outfit, hat, and pet accessories.',
+      ),
+    );
+
+    // Outfits
+    const outfitSection = h('div', { class: 'wardrobe-section' });
+    outfitSection.appendChild(h('h3', {}, '👗 Character Outfits'));
+    const outfitGrid = h('div', { class: 'wardrobe-grid' });
+
+    OUTFIT_IDS.forEach((id) => {
+      const def = OUTFITS[id];
+      const isSelected = (s.currentOutfit ?? 'classic') === id;
+      const card = h(
+        'button',
+        {
+          class: `wardrobe-card ${isSelected ? 'selected' : ''}`,
+          'data-testid': `outfit-${id}`,
+        },
+        h('div', { class: 'wardrobe-preview', style: `background: ${def.overallsHex}` }),
+        h('div', { class: 'wardrobe-name' }, def.name),
+        h('div', { class: 'wardrobe-desc' }, def.description),
+      );
+      card.addEventListener('click', () => {
+        this.store.dispatch(actions.changeOutfit(id));
+        this.renderWardrobe();
+      });
+      outfitGrid.appendChild(card);
+    });
+    outfitSection.appendChild(outfitGrid);
+    container.appendChild(outfitSection);
+
+    // Hats
+    const hatSection = h('div', { class: 'wardrobe-section' });
+    hatSection.appendChild(h('h3', {}, '👒 Hats & Headwear'));
+    const hatGrid = h('div', { class: 'wardrobe-grid' });
+
+    HAT_IDS.forEach((id) => {
+      const def = HATS[id];
+      const isSelected = (s.currentHat ?? 'straw_hat') === id;
+      const card = h(
+        'button',
+        {
+          class: `wardrobe-card ${isSelected ? 'selected' : ''}`,
+          'data-testid': `hat-${id}`,
+        },
+        h('div', { class: 'wardrobe-icon' }, def.icon),
+        h('div', { class: 'wardrobe-name' }, def.name),
+      );
+      card.addEventListener('click', () => {
+        this.store.dispatch(actions.changeHat(id));
+        this.renderWardrobe();
+      });
+      hatGrid.appendChild(card);
+    });
+    hatSection.appendChild(hatGrid);
+    container.appendChild(hatSection);
+
+    // Pet accessories
+    const petsOwned = s.pets ?? ['cat'];
+    if (petsOwned.length > 0) {
+      const petSection = h('div', { class: 'wardrobe-section' });
+      petSection.appendChild(h('h3', {}, '🐾 Pet Accessories'));
+      const petGrid = h('div', { class: 'wardrobe-grid' });
+
+      petsOwned.forEach((petId) => {
+        const petDef = PETS[petId];
+        const currentAcc = s.petAccessories?.[petId] ?? 'none';
+        const card = h(
+          'div',
+          { class: 'wardrobe-card pet-card' },
+          h('div', { class: 'wardrobe-icon' }, petDef.icon),
+          h('div', { class: 'wardrobe-name' }, petDef.name),
+          h(
+            'div',
+            { class: 'pet-acc-buttons' },
+            ...PET_ACCESSORY_IDS.map((accId) => {
+              const accDef = PET_ACCESSORIES[accId];
+              const btn = h(
+                'button',
+                {
+                  class: `tiny-btn ${currentAcc === accId ? 'active' : ''}`,
+                  'data-testid': `pet-${petId}-acc-${accId}`,
+                },
+                `${accDef.icon} ${accDef.name}`,
+              );
+              btn.addEventListener('click', () => {
+                this.store.dispatch(actions.setPetAccessory(petId, accId));
+                this.renderWardrobe();
+              });
+              return btn;
+            }),
+          ),
+        );
+        petGrid.appendChild(card);
+      });
+      petSection.appendChild(petGrid);
+      container.appendChild(petSection);
+    }
+
+    this.bodyEl.appendChild(container);
+  }
+
+  private renderStargaze(): void {
+    const s = this.store.getState();
+    const container = h('div', { class: 'cottage-view stargaze-view' });
+
+    const constellationIndex = s.day % CONSTELLATIONS.length;
+    const defaultConstellation = {
+      id: 'golden_koi',
+      name: 'The Golden Koi',
+      description: 'A shimmering constellation said to bring bountiful harvests and calm waters.',
+      icon: '✨🐟',
+    };
+    const constellation = CONSTELLATIONS[constellationIndex] ?? defaultConstellation;
+
+    const starCard = h(
+      'div',
+      { class: 'tea-card star-card' },
+      h('div', { class: 'tea-icon' }, '🔭'),
+      h('h3', {}, `Tonight's Constellation: ${constellation.name}`),
+      h('p', {}, constellation.description),
+      h(
+        'button',
+        { class: 'primary-btn star-btn', 'data-testid': 'stargaze-btn' },
+        'Look Through Brass Telescope ✨🔭',
+      ),
+    );
+
+    starCard.querySelector('button')?.addEventListener('click', () => {
+      this.store.dispatch(actions.stargazeTelescope());
+      const btn = starCard.querySelector<HTMLButtonElement>('button');
+      if (btn) btn.textContent = `Observed ${constellation.name}! 🌟 (+3 Bloom)`;
+    });
+    container.appendChild(starCard);
+
+    // Wishing Well Section
+    const wellCard = h(
+      'div',
+      { class: 'tea-card well-card' },
+      h('div', { class: 'tea-icon' }, '🪙'),
+      h('h3', {}, 'Ancient Stone Wishing Well'),
+      h(
+        'p',
+        {},
+        'Toss a shiny gold coin into the mossy stone well to receive an island harvest blessing.',
+      ),
+      h(
+        'button',
+        {
+          class: `primary-btn well-btn ${s.coins >= 10 ? '' : 'disabled'}`,
+          'data-testid': 'toss-well-btn',
+          disabled: s.coins < 10,
+        },
+        'Toss 10 Coins for Blessing 🪙💫',
+      ),
+    );
+
+    wellCard.querySelector('button')?.addEventListener('click', () => {
+      this.store.dispatch(actions.tossWishingWell());
+      this.renderStargaze();
+    });
+    container.appendChild(wellCard);
+
+    // Greenhouse Unlock Section
+    if (!s.greenhouseUnlocked) {
+      const ghCard = h(
+        'div',
+        { class: 'tea-card gh-card' },
+        h('div', { class: 'tea-icon' }, '🌿'),
+        h('h3', {}, 'Glass Greenhouse & Botanical Conservatory'),
+        h(
+          'p',
+          {},
+          'Construct a geodesic glass greenhouse on the meadow to cultivate off-season crops and breed rare flowers (Cost: 100🪙, Requires: 40🌸).',
+        ),
+        h(
+          'button',
+          {
+            class: `primary-btn gh-btn ${s.coins >= 100 && s.bloom >= 40 ? '' : 'disabled'}`,
+            'data-testid': 'unlock-greenhouse-btn',
+            disabled: s.coins < 100 || s.bloom < 40,
+          },
+          'Build Glass Greenhouse (100🪙) 🌿',
+        ),
+      );
+
+      ghCard.querySelector('button')?.addEventListener('click', () => {
+        this.store.dispatch(actions.unlockGreenhouse());
+        this.renderStargaze();
+      });
+      container.appendChild(ghCard);
+    } else {
+      container.appendChild(
+        h(
+          'div',
+          { class: 'empty-notice' },
+          '🌿 Glass Greenhouse Dome is flourishing on the meadow!',
+        ),
+      );
+    }
+
+    this.bodyEl.appendChild(container);
+  }
+
+  private renderPostcards(): void {
+    const s = this.store.getState();
+    const container = h('div', { class: 'cottage-view postcards-view' });
+
+    // Snap photo card
+    const snapCard = h(
+      'div',
+      { class: 'tea-card snap-card' },
+      h('div', { class: 'tea-icon' }, '📸'),
+      h('h3', {}, 'Island Polaroid Camera & Postcards'),
+      h(
+        'p',
+        {},
+        'Frame a serene moment on Tiny Isle and record it in your journal postcard album.',
+      ),
+      h(
+        'div',
+        { class: 'snap-form' },
+        h(
+          'select',
+          { class: 'snap-filter', 'data-testid': 'snap-filter' },
+          h('option', { value: 'polaroid' }, '🎞️ Classic Polaroid'),
+          h('option', { value: 'vintage' }, '📜 Vintage Warm Sepia'),
+          h('option', { value: 'warm_sun' }, '☀️ Golden Sunlight'),
+          h('option', { value: 'misty_dusk' }, '🌙 Twilight Glow'),
+        ),
+        h(
+          'button',
+          { class: 'primary-btn snap-btn', 'data-testid': 'snap-postcard-btn' },
+          'Snap Island Postcard 📸',
+        ),
+      ),
+    );
+
+    snapCard.querySelector('.snap-btn')?.addEventListener('click', () => {
+      const filterSelect = snapCard.querySelector<HTMLSelectElement>('.snap-filter');
+      const filter = (filterSelect?.value ?? 'polaroid') as PostcardFilter;
+      this.store.dispatch(
+        actions.snapPostcard(
+          `Day ${s.day} Memories`,
+          filter,
+          'A peaceful morning surrounded by blooming crops and ocean waves.',
+        ),
+      );
+      this.renderPostcards();
+    });
+    container.appendChild(snapCard);
+
+    // Gallery
+    const postcards = s.postcards ?? [];
+    if (postcards.length === 0) {
+      container.appendChild(
+        h('div', { class: 'empty-notice' }, '📸 No postcards snapped yet. Take your first photo!'),
+      );
+    } else {
+      const grid = h('div', { class: 'postcards-grid' });
+      postcards.forEach((pc) => {
+        const item = h(
+          'div',
+          { class: `postcard-item filter-${pc.filter}` },
+          h('div', { class: 'postcard-stamp' }, '🌸'),
+          h('div', { class: 'postcard-title' }, pc.title),
+          h('div', { class: 'postcard-meta' }, `Day ${pc.day} • ${pc.season}`),
+          h('div', { class: 'postcard-caption' }, pc.caption),
+        );
+        grid.appendChild(item);
+      });
+      container.appendChild(grid);
+    }
+
+    this.bodyEl.appendChild(container);
   }
 
   show(): void {

@@ -1,7 +1,16 @@
-import { BALANCE, SEASON_LENGTH } from '../config';
+import type { BottleLetterDef } from '../config';
+import { BALANCE, BOTTLE_LETTERS, FARMSTAND_CUSTOMERS, SEASON_LENGTH } from '../config';
 import { isRipe, mapTiles } from '../plot';
 import { nextRandom } from '../rng';
-import type { GameState, Outcome, Season, Tile } from '../types';
+import type {
+  BeachBottle,
+  FarmstandOrder,
+  GameState,
+  Outcome,
+  RecipeId,
+  Season,
+  Tile,
+} from '../types';
 import { spawnForageNodes } from './foraging';
 import { chain, ok } from './outcome';
 import { maybeVisitorArrives } from './visitors';
@@ -22,6 +31,37 @@ export const growOvernight = (tile: Tile): Tile => {
 const rainWater = (tile: Tile): Tile =>
   tile.tilled && !tile.watered ? { ...tile, watered: true } : tile;
 
+const generateMorningOrders = (day: number): readonly FarmstandOrder[] => {
+  const customer1 =
+    FARMSTAND_CUSTOMERS[day % FARMSTAND_CUSTOMERS.length] ?? FARMSTAND_CUSTOMERS[0] ?? 'Traveler';
+  const customer2 =
+    FARMSTAND_CUSTOMERS[(day + 1) % FARMSTAND_CUSTOMERS.length] ??
+    FARMSTAND_CUSTOMERS[0] ??
+    'Traveler';
+  const dishes: readonly RecipeId[] = ['carrot_soup', 'berry_jam', 'tomato_pasta', 'honey_tea'];
+  const dish1 = dishes[day % dishes.length] ?? 'carrot_soup';
+  const dish2 = dishes[(day + 2) % dishes.length] ?? 'berry_jam';
+
+  return [
+    {
+      id: `order_${day}_1`,
+      item: dish1,
+      itemType: 'recipe',
+      customerName: customer1,
+      rewardCoins: 24,
+      rewardBloom: 4,
+    },
+    {
+      id: `order_${day}_2`,
+      item: dish2,
+      itemType: 'recipe',
+      customerName: customer2,
+      rewardCoins: 28,
+      rewardBloom: 5,
+    },
+  ];
+};
+
 /** Sleep: advance to the next morning, roll the weather, maybe greet a visitor. */
 export const sleep = (state: GameState): Outcome => {
   const grown = mapTiles(state.plot, growOvernight);
@@ -30,12 +70,30 @@ export const sleep = (state: GameState): Outcome => {
   const plot = weather === 'rain' ? mapTiles(grown, rainWater) : grown;
   const day = state.day + 1;
   const season = getSeasonForDay(day);
+
+  // Daily message in a bottle on the shoreline
+  const letterIndex = day % BOTTLE_LETTERS.length;
+  const bottleData: BottleLetterDef | undefined = BOTTLE_LETTERS[letterIndex] ?? BOTTLE_LETTERS[0];
+  const beachBottle: BeachBottle | undefined = bottleData
+    ? {
+        id: `bottle_${day}`,
+        letter: bottleData.letter,
+        rewardCoins: bottleData.rewardCoins,
+        ...(bottleData.rewardSeed !== undefined ? { rewardSeed: bottleData.rewardSeed } : {}),
+        read: false,
+      }
+    : undefined;
+
+  const farmstandOrders = generateMorningOrders(day);
+
   const withForage = spawnForageNodes({
     ...state,
     plot,
     day,
     season,
     weather,
+    farmstandOrders,
+    beachBottle: beachBottle ?? null,
     rngSeed: roll.nextSeed,
   });
 

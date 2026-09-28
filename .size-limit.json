@@ -8,13 +8,13 @@
   {
     "name": "Game code (entry chunk)",
     "path": "dist/assets/index-*.js",
-    "limit": "50 kB",
+    "limit": "60 kB",
     "gzip": true
   },
   {
     "name": "Styles",
     "path": "dist/assets/index-*.css",
-    "limit": "4 kB",
+    "limit": "6 kB",
     "gzip": true
   },
   {

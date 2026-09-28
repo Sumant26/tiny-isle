@@ -49,6 +49,12 @@ export const LAYOUT = {
     birdbath: { x: 5, z: 12 },
     windchime: { x: 2, z: 5 },
     gnome: { x: 11, z: 3 },
+    beehive: { x: 11, z: 2 },
+    campfire: { x: 9, z: 2 },
+    picnic_mat: { x: 2, z: 4 },
+    hammock: { x: 12, z: 6 },
+    wishing_well: { x: 2, z: 7 },
+    greenhouse: { x: 3, z: 2 },
   },
 } as const;
 

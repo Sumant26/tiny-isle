@@ -176,6 +176,22 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
       return 'levelup';
     case 'visitor-arrived':
       return 'visitor';
+    case 'farmstand-served':
+    case 'bottle-read':
+    case 'honey-harvested':
+      return 'coin';
+    case 'stargazed':
+    case 'wishing-well-blessed':
+      return 'levelup';
+    case 'greenhouse-unlocked':
+      return 'expand';
+    case 'postcard-snapped':
+    case 'outfit-changed':
+    case 'hat-changed':
+    case 'pet-accessory-changed':
+    case 'campfire-toggled':
+    case 'hammock-rested':
+      return 'forage';
     case 'day-started':
     case 'moved':
     case 'crop-unlocked':

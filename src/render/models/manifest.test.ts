@@ -16,7 +16,7 @@ describe('MODEL_KEYS', () => {
         'prop/cottage',
       ]),
     );
-    expect(MODEL_KEYS).toHaveLength(5 * 4 + 5 + 3 + 3 + 2);
+    expect(MODEL_KEYS).toHaveLength(5 * 4 + 11 + 3 + 3 + 2);
   });
 });
 

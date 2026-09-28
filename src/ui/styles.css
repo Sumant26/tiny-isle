@@ -1004,6 +1004,229 @@ body.colorblind-mode .slot::after {
   border: 1px solid var(--border);
 }
 
+/* Orders, Wardrobe, Stargazing, Postcards Styles */
+.bottle-card {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+  margin-bottom: 12px;
+}
+
+.wardrobe-section {
+  margin-bottom: 16px;
+}
+
+.wardrobe-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.wardrobe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.wardrobe-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wardrobe-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.wardrobe-card.selected {
+  background: linear-gradient(135deg, #fff9db 0%, #ffeaa7 100%);
+  border-color: #f59f00;
+  box-shadow: 0 4px 12px rgba(245, 159, 0, 0.25);
+}
+
+.wardrobe-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-bottom: 6px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.wardrobe-icon {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.wardrobe-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.wardrobe-desc {
+  font-size: 10px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.pet-card {
+  cursor: default;
+}
+
+.pet-acc-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.tiny-btn {
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tiny-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.star-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
+  color: #f8fafc !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.star-card h3 {
+  color: #fef08a !important;
+}
+
+.star-btn {
+  background: #f59e0b !important;
+  color: #ffffff !important;
+}
+
+.well-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border-color: #4ade80 !important;
+  margin-top: 10px;
+}
+
+.gh-card {
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%) !important;
+  border-color: #22d3ee !important;
+  margin-top: 10px;
+}
+
+.snap-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+  border-color: #fde047 !important;
+  margin-bottom: 12px;
+}
+
+.snap-form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.snap-filter {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.postcards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.postcard-item {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 12px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.2s ease;
+}
+
+.postcard-item:hover {
+  transform: rotate(-1deg) scale(1.02);
+}
+
+.postcard-item.filter-vintage {
+  background: #fbf5e8;
+  filter: sepia(0.35);
+}
+
+.postcard-item.filter-polaroid {
+  padding-bottom: 24px;
+  border-bottom: 8px solid #ffffff;
+}
+
+.postcard-item.filter-warm_sun {
+  background: #fffcf0;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+}
+
+.postcard-item.filter-misty_dusk {
+  background: #f1f5f9;
+}
+
+.postcard-stamp {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 16px;
+}
+
+.postcard-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.postcard-meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.postcard-caption {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+
 @media (max-width: 600px) {
   .slot {
     width: 40px;

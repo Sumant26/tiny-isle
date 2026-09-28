@@ -41,6 +41,25 @@ describe('migrate', () => {
       expect(result.value.achievements).toEqual([]);
       expect(result.value.journal).toEqual(['Arrived on the peaceful Tiny Isle.']);
       expect((result.value.settings as Record<string, unknown>).highContrast).toBe(false);
+      expect(result.value.currentOutfit).toBe('classic');
+      expect(result.value.currentHat).toBe('straw_hat');
+    }
+  });
+
+  it('migrates v3 save to v4 save', () => {
+    const v3State = {
+      day: 5,
+      coins: 100,
+      stats: { harvested: 10, earned: 80 },
+    };
+    const result = migrate(v3State, 3);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.currentOutfit).toBe('classic');
+      expect(result.value.currentHat).toBe('straw_hat');
+      expect(result.value.honeyJars).toBe(0);
+      expect(result.value.campfireLit).toBe(false);
+      expect((result.value.stats as Record<string, unknown>).ordersServed).toBe(0);
     }
   });
 

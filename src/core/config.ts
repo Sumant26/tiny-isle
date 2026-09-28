@@ -4,7 +4,10 @@ import type {
   FishId,
   ForageId,
   FruitId,
+  HatId,
   MusicTrackId,
+  OutfitId,
+  PetAccessoryId,
   PetId,
   RecipeId,
   VisitorId,
@@ -119,9 +122,32 @@ export const FORAGE: Readonly<Record<ForageId, ForageDef>> = {
     bloomPoints: 1,
     description: 'Delicate wildflower petals with sweet aroma.',
   },
+  starfish: {
+    id: 'starfish',
+    name: 'Amber Starfish',
+    icon: '⭐',
+    sellPrice: 15,
+    bloomPoints: 2,
+    description: 'A tiny amber starfish found resting in the beach tide pool.',
+  },
+  sea_pearl: {
+    id: 'sea_pearl',
+    name: 'Luminous Sea Pearl',
+    icon: '🦪',
+    sellPrice: 35,
+    bloomPoints: 5,
+    description: 'A rare shimmering pearl retrieved from the ocean shallows.',
+  },
 };
 
-export const FORAGE_IDS: readonly ForageId[] = ['mushroom', 'berry', 'seashell', 'wildflower'];
+export const FORAGE_IDS: readonly ForageId[] = [
+  'mushroom',
+  'berry',
+  'seashell',
+  'wildflower',
+  'starfish',
+  'sea_pearl',
+];
 
 export interface FruitDef {
   readonly id: FruitId;
@@ -185,6 +211,26 @@ export const PETS: Readonly<Record<PetId, PetDef>> = {
 
 export const PET_IDS: readonly PetId[] = ['cat', 'puppy', 'bunny', 'duckling'];
 
+export interface PetAccessoryDef {
+  readonly id: PetAccessoryId;
+  readonly name: string;
+  readonly icon: string;
+}
+
+export const PET_ACCESSORIES: Readonly<Record<PetAccessoryId, PetAccessoryDef>> = {
+  flower_collar: { id: 'flower_collar', name: 'Spring Flower Collar', icon: '🌸' },
+  red_bandana: { id: 'red_bandana', name: 'Red Plaid Bandana', icon: '🧣' },
+  winter_scarf: { id: 'winter_scarf', name: 'Warm Knitted Scarf', icon: '🧣' },
+  none: { id: 'none', name: 'No Collar', icon: '⚪' },
+};
+
+export const PET_ACCESSORY_IDS: readonly PetAccessoryId[] = [
+  'flower_collar',
+  'red_bandana',
+  'winter_scarf',
+  'none',
+];
+
 export interface MusicTrackDef {
   readonly id: MusicTrackId;
   readonly title: string;
@@ -243,9 +289,23 @@ export const DECORATIONS: Readonly<Record<DecorationId, DecorationDef>> = {
   campfire: { id: 'campfire', name: 'Stone campfire', cost: 50, bloomPoints: 8 },
   picnic_mat: { id: 'picnic_mat', name: 'Meadow picnic spot', cost: 40, bloomPoints: 6 },
   hammock: { id: 'hammock', name: 'Orchard hammock', cost: 65, bloomPoints: 8 },
+  wishing_well: { id: 'wishing_well', name: 'Ancient Wishing Well', cost: 80, bloomPoints: 10 },
+  greenhouse: { id: 'greenhouse', name: 'Glass Greenhouse Dome', cost: 120, bloomPoints: 15 },
 };
 
-export const DECORATION_IDS = Object.keys(DECORATIONS) as DecorationId[];
+export const DECORATION_IDS: readonly DecorationId[] = [
+  'flowerbed',
+  'bench',
+  'birdbath',
+  'windchime',
+  'gnome',
+  'beehive',
+  'campfire',
+  'picnic_mat',
+  'hammock',
+  'wishing_well',
+  'greenhouse',
+];
 
 export interface VisitorDef {
   readonly id: VisitorId;
@@ -455,7 +515,12 @@ export const OUTFITS: Readonly<Record<OutfitId, OutfitDef>> = {
   },
 };
 
-export const OUTFIT_IDS = Object.keys(OUTFITS) as readonly OutfitId[];
+export const OUTFIT_IDS: readonly OutfitId[] = [
+  'classic',
+  'gardener',
+  'autumn_sweater',
+  'floral_apron',
+];
 
 export interface HatDef {
   readonly id: HatId;
@@ -470,7 +535,7 @@ export const HATS: Readonly<Record<HatId, HatDef>> = {
   none: { id: 'none', name: 'No Hat', icon: '👤' },
 };
 
-export const HAT_IDS = Object.keys(HATS) as readonly HatId[];
+export const HAT_IDS: readonly HatId[] = ['straw_hat', 'flower_crown', 'bandana', 'none'];
 
 export interface FishDef {
   readonly id: FishId;
@@ -575,11 +640,112 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     description: 'Expand your garden plot.',
     icon: '🏡',
   },
+  {
+    id: 'tea_stand_barista',
+    title: 'Cozy Stand Host',
+    description: 'Serve hungry visitors from your roadside farmstand.',
+    icon: '☕',
+  },
+  {
+    id: 'stargazer',
+    title: 'Night Stargazer',
+    description: 'Gaze into the night sky through the islet telescope.',
+    icon: '🔭',
+  },
+  {
+    id: 'wishing_well_blessed',
+    title: 'Wish Upon a Coin',
+    description: 'Toss a coin into the ancient stone wishing well.',
+    icon: '🪙',
+  },
+  {
+    id: 'photo_album_first',
+    title: 'Postcard Memories',
+    description: 'Snap your first island photo and save it to the album.',
+    icon: '📸',
+  },
+];
+
+export interface ConstellationDef {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+}
+
+export const CONSTELLATIONS: readonly ConstellationDef[] = [
+  {
+    id: 'golden_koi',
+    name: 'The Golden Koi',
+    description: 'A shimmering constellation said to bring bountiful harvests and calm waters.',
+    icon: '✨🐟',
+  },
+  {
+    id: 'cosmic_cat',
+    name: 'The Hearthside Feline',
+    description: 'Four bright stars depicting a curled up cat resting by celestial embers.',
+    icon: '✨🐱',
+  },
+  {
+    id: 'great_sprout',
+    name: 'The Great Island Sprout',
+    description: 'Guiding star cluster that sparkles above tranquil meadow blossoms.',
+    icon: '✨🌱',
+  },
+  {
+    id: 'sailors_beacon',
+    name: "Sailor's Beacon",
+    description: 'A luminous northern lantern constellation guiding wandering island travelers.',
+    icon: '✨🏮',
+  },
+];
+
+export interface BottleLetterDef {
+  readonly letter: string;
+  readonly rewardCoins: number;
+  readonly rewardSeed?: CropId;
+}
+
+export const BOTTLE_LETTERS: readonly BottleLetterDef[] = [
+  {
+    letter:
+      'Dear friend across the tides, may your crops drink deeply of the morning dew and your hearth burn bright.',
+    rewardCoins: 15,
+  },
+  {
+    letter:
+      'Found a pocket of rare heirloom seeds along the coral reef! Hope they flourish under your gentle care.',
+    rewardSeed: 'sunflower',
+    rewardCoins: 20,
+  },
+  {
+    letter:
+      'The sea was calm tonight. A wandering seagull sang of a quiet green isle where honey and chamomile tea brew.',
+    rewardCoins: 25,
+  },
+  {
+    letter:
+      'Toss a gold coin into the wishing well when the moon is full; ancient spirits whisper good fortune to island farmers.',
+    rewardCoins: 30,
+  },
+];
+
+export const FARMSTAND_CUSTOMERS = [
+  'Traveler Rowan',
+  'Captain Finn',
+  'Botanist Clover',
+  'Sailor Maeve',
+  'Forager Bramble',
 ];
 
 export const ISLET_EXPANSION = {
   cost: 60,
   requiredBloom: 25,
+} as const;
+
+export const GREENHOUSE_EXPANSION = {
+  cost: 100,
+  requiredBloom: 40,
 } as const;
 
 export const PLOT_EXPANSIONS = [

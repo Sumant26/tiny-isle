@@ -18,13 +18,16 @@ export type DecorationId =
   | 'beehive'
   | 'campfire'
   | 'picnic_mat'
-  | 'hammock';
+  | 'hammock'
+  | 'wishing_well'
+  | 'greenhouse';
 export type VisitorId = 'hazel' | 'pip' | 'moss';
 export type Weather = 'clear' | 'rain';
 export type CropStage = 'seed' | 'sprout' | 'growing' | 'ripe';
 
 export type OutfitId = 'classic' | 'gardener' | 'autumn_sweater' | 'floral_apron';
 export type HatId = 'straw_hat' | 'flower_crown' | 'bandana' | 'none';
+export type PetAccessoryId = 'flower_collar' | 'red_bandana' | 'winter_scarf' | 'none';
 
 /** Integer cell coordinate on the island's walk grid. */
 export interface Cell {
@@ -78,7 +81,7 @@ export type RecipeId =
   | 'honey_tea'
   | 'honey_berries';
 export type FishId = 'koi' | 'goldfish' | 'perch' | 'sparklefish';
-export type ForageId = 'mushroom' | 'berry' | 'seashell' | 'wildflower';
+export type ForageId = 'mushroom' | 'berry' | 'seashell' | 'wildflower' | 'starfish' | 'sea_pearl';
 export type FruitId = 'apple' | 'cherry' | 'citrus';
 export type MusicTrackId = 'morning_breeze' | 'lofi_rain' | 'warm_hearth' | 'off';
 export type PetId = 'cat' | 'puppy' | 'bunny' | 'duckling';
@@ -87,6 +90,34 @@ export interface ForageNode {
   readonly id: string;
   readonly type: ForageId;
   readonly cell: Cell;
+}
+
+export interface FarmstandOrder {
+  readonly id: string;
+  readonly item: RecipeId | CropId;
+  readonly itemType: 'recipe' | 'crop';
+  readonly customerName: string;
+  readonly rewardCoins: number;
+  readonly rewardBloom: number;
+}
+
+export interface BeachBottle {
+  readonly id: string;
+  readonly letter: string;
+  readonly rewardSeed?: CropId;
+  readonly rewardCoins?: number;
+  readonly read: boolean;
+}
+
+export type PostcardFilter = 'vintage' | 'polaroid' | 'warm_sun' | 'misty_dusk';
+
+export interface Postcard {
+  readonly id: string;
+  readonly title: string;
+  readonly day: number;
+  readonly season: Season;
+  readonly filter: PostcardFilter;
+  readonly caption: string;
 }
 
 export interface Settings {
@@ -109,6 +140,10 @@ export interface Stats {
   readonly foraged?: number;
   readonly visitorGifts?: number;
   readonly honeyCollected?: number;
+  readonly ordersServed?: number;
+  readonly wishesMade?: number;
+  readonly starsObserved?: number;
+  readonly postcardsTaken?: number;
 }
 
 export interface GameState {
@@ -128,8 +163,10 @@ export interface GameState {
   readonly campfireLit?: boolean;
   readonly currentOutfit?: OutfitId;
   readonly currentHat?: HatId;
+  readonly petAccessories?: Readonly<Partial<Record<PetId, PetAccessoryId>>>;
   readonly forageNodes?: readonly ForageNode[];
   readonly isletUnlocked?: boolean;
+  readonly greenhouseUnlocked?: boolean;
   readonly pets?: readonly PetId[];
   readonly activeMusicTrack?: MusicTrackId;
   readonly unlockedCrops: readonly CropId[];
@@ -138,6 +175,9 @@ export interface GameState {
   readonly bloom: number;
   readonly visitor: ActiveVisitor | null;
   readonly visitorsHelped: readonly VisitorId[];
+  readonly farmstandOrders?: readonly FarmstandOrder[];
+  readonly beachBottle?: BeachBottle | null;
+  readonly postcards?: readonly Postcard[];
   readonly weather: Weather;
   readonly catHappiness?: number;
   readonly achievements?: readonly string[];
@@ -164,9 +204,12 @@ export type RejectReason =
   | 'not-enough-forage'
   | 'not-enough-fruit'
   | 'islet-locked'
+  | 'greenhouse-locked'
   | 'already-owned'
   | 'max-size'
   | 'no-visitor'
+  | 'no-order'
+  | 'no-bottle'
   | 'no-meal-to-eat'
   | 'no-fish-to-eat'
   | 'blocked'
@@ -204,6 +247,12 @@ export type GameEvent =
       readonly visitor: VisitorId;
       readonly gift: string;
     }
+  | { readonly type: 'farmstand-served'; readonly orderId: string; readonly rewardCoins: number }
+  | { readonly type: 'bottle-read'; readonly letter: string; readonly rewardCoins?: number }
+  | { readonly type: 'stargazed'; readonly constellation: string }
+  | { readonly type: 'wishing-well-blessed'; readonly blessing: string }
+  | { readonly type: 'greenhouse-unlocked' }
+  | { readonly type: 'postcard-snapped'; readonly title: string }
   | { readonly type: 'bloom-level-up'; readonly level: number }
   | { readonly type: 'crop-unlocked'; readonly crop: CropId }
   | { readonly type: 'cooked'; readonly recipe: RecipeId }
@@ -215,6 +264,11 @@ export type GameEvent =
   | { readonly type: 'orchard-harvested'; readonly fruit: FruitId; readonly count: number }
   | { readonly type: 'music-track-changed'; readonly track: MusicTrackId }
   | { readonly type: 'pet-adopted'; readonly pet: PetId }
+  | {
+      readonly type: 'pet-accessory-changed';
+      readonly pet: PetId;
+      readonly accessory: PetAccessoryId;
+    }
   | { readonly type: 'pet-interacted'; readonly pet: PetId; readonly sound: string }
   | {
       readonly type: 'cottage-activity';

@@ -35,7 +35,10 @@ export const REJECT_MESSAGES: Record<RejectReason, string> = {
   'islet-locked': 'The orchard islet is not unlocked yet.',
   'already-owned': 'You already have one of those.',
   'max-size': 'Garden is already at maximum size.',
-  'no-visitor': 'Nobody is visiting right now.',
+  'no-visitor': 'There are no visitors on the island today.',
+  'no-order': 'No matching customer order.',
+  'no-bottle': 'No unread ocean letter on the shore right now.',
+  'greenhouse-locked': 'The Glass Greenhouse is not unlocked yet.',
   'no-meal-to-eat': 'No cooked meals ready to eat.',
   'no-fish-to-eat': 'No fresh fish in inventory.',
   blocked: "You can't walk there.",
@@ -72,12 +75,39 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
       return { text: `Foraged ${e.item}! 🍄`, tone: 'good' };
     case 'islet-unlocked':
       return { text: '🌉 Restored the bridge to Orchard Islet!', tone: 'good' };
+    case 'greenhouse-unlocked':
+      return { text: '🌿 Glass Greenhouse Dome opened on the meadow!', tone: 'good' };
     case 'orchard-harvested':
       return { text: `Harvested ${e.count} fresh ${e.fruit}s! 🍎`, tone: 'good' };
     case 'pet-adopted':
       return { text: `Adopted a new island companion: ${e.pet}! 🐾`, tone: 'good' };
     case 'pet-interacted':
       return { text: '❤️ Your pet looks very happy!', tone: 'good' };
+    case 'pet-accessory-changed':
+      return { text: `Fitted cute accessory to your ${e.pet}! 🌸`, tone: 'good' };
+    case 'outfit-changed':
+      return { text: `Changed outfit to ${e.outfit.replace('_', ' ')}! 👗`, tone: 'good' };
+    case 'hat-changed':
+      return { text: `Changed hat! 👒`, tone: 'good' };
+    case 'honey-harvested':
+      return { text: `+${e.count} Golden Wildflower Honey Jar 🍯`, tone: 'good' };
+    case 'campfire-toggled':
+      return {
+        text: e.lit ? 'Lit the warm evening campfire! 🔥' : 'Put out the campfire embers.',
+        tone: 'good',
+      };
+    case 'hammock-rested':
+      return { text: 'Rested peacefully in the meadow hammock! 🌿 (+Bloom)', tone: 'good' };
+    case 'farmstand-served':
+      return { text: `Served customer order! +${e.rewardCoins} coins ☕✨`, tone: 'good' };
+    case 'bottle-read':
+      return { text: `Read beach bottle: "${e.letter}" 📜`, tone: 'good' };
+    case 'stargazed':
+      return { text: `Observed constellation: ${e.constellation} ✨🔭`, tone: 'good' };
+    case 'wishing-well-blessed':
+      return { text: `Wishing well blessing: ${e.blessing} 🪙💫`, tone: 'good' };
+    case 'postcard-snapped':
+      return { text: `📸 Postcard saved to Album: ${e.title}`, tone: 'good' };
     case 'visitor-gifted':
       return { text: `Gifted visitor! Received ${e.gift} 🎁`, tone: 'good' };
     case 'cottage-activity':

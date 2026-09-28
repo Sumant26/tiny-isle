@@ -31,7 +31,7 @@ describe('serialize / deserialize', () => {
   it('round-trips a state', () => {
     const s = makeState();
     const raw = serialize(s, new Date('2026-01-01T00:00:00Z'));
-    expect(JSON.parse(raw)).toMatchObject({ version: 3, savedAt: '2026-01-01T00:00:00.000Z' });
+    expect(JSON.parse(raw)).toMatchObject({ version: 4, savedAt: '2026-01-01T00:00:00.000Z' });
     expect(deserialize(raw)).toEqual({ ok: true, value: s });
   });
 

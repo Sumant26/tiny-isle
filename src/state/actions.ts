@@ -6,7 +6,10 @@ import type {
   ForageId,
   FruitId,
   GameState,
+  HatId,
   MusicTrackId,
+  OutfitId,
+  PetAccessoryId,
   PetId,
   RecipeId,
   Settings,
@@ -59,10 +62,31 @@ export type Action =
   | { readonly type: 'forage/collect'; readonly nodeId: string }
   | { readonly type: 'visitor/gift'; readonly recipe: RecipeId | 'tea' }
   | { readonly type: 'islet/unlock' }
+  | { readonly type: 'greenhouse/unlock' }
   | { readonly type: 'orchard/harvest' }
   | { readonly type: 'pet/adopt'; readonly pet: PetId }
   | { readonly type: 'pet/interact'; readonly pet: PetId }
+  | {
+      readonly type: 'pet/setAccessory';
+      readonly pet: PetId;
+      readonly accessory: PetAccessoryId;
+    }
   | { readonly type: 'music/setTrack'; readonly track: MusicTrackId }
+  | { readonly type: 'wardrobe/changeOutfit'; readonly outfit: OutfitId }
+  | { readonly type: 'wardrobe/changeHat'; readonly hat: HatId }
+  | { readonly type: 'beekeeping/harvestHoney' }
+  | { readonly type: 'campfire/toggle' }
+  | { readonly type: 'hammock/rest' }
+  | { readonly type: 'farmstand/serve'; readonly orderId: string }
+  | { readonly type: 'bottle/read' }
+  | { readonly type: 'telescope/stargaze' }
+  | { readonly type: 'wishingWell/toss' }
+  | {
+      readonly type: 'camera/snap';
+      readonly title: string;
+      readonly filter: 'vintage' | 'polaroid' | 'warm_sun' | 'misty_dusk';
+      readonly caption: string;
+    }
   | { readonly type: 'cat/pet' }
   | { readonly type: 'visitor/fulfill' }
   | { readonly type: 'settings/update'; readonly patch: Partial<Settings> }
@@ -115,10 +139,30 @@ export const actions = {
   collectForage: (nodeId: string): Action => ({ type: 'forage/collect', nodeId }),
   giftVisitor: (recipe: RecipeId | 'tea'): Action => ({ type: 'visitor/gift', recipe }),
   unlockIslet: (): Action => ({ type: 'islet/unlock' }),
+  unlockGreenhouse: (): Action => ({ type: 'greenhouse/unlock' }),
   harvestOrchard: (): Action => ({ type: 'orchard/harvest' }),
   adoptPet: (pet: PetId): Action => ({ type: 'pet/adopt', pet }),
   interactPet: (pet: PetId): Action => ({ type: 'pet/interact', pet }),
+  setPetAccessory: (pet: PetId, accessory: PetAccessoryId): Action => ({
+    type: 'pet/setAccessory',
+    pet,
+    accessory,
+  }),
   setMusicTrack: (track: MusicTrackId): Action => ({ type: 'music/setTrack', track }),
+  changeOutfit: (outfit: OutfitId): Action => ({ type: 'wardrobe/changeOutfit', outfit }),
+  changeHat: (hat: HatId): Action => ({ type: 'wardrobe/changeHat', hat }),
+  harvestHoney: (): Action => ({ type: 'beekeeping/harvestHoney' }),
+  toggleCampfire: (): Action => ({ type: 'campfire/toggle' }),
+  restHammock: (): Action => ({ type: 'hammock/rest' }),
+  serveFarmstandOrder: (orderId: string): Action => ({ type: 'farmstand/serve', orderId }),
+  readBeachBottle: (): Action => ({ type: 'bottle/read' }),
+  stargazeTelescope: (): Action => ({ type: 'telescope/stargaze' }),
+  tossWishingWell: (): Action => ({ type: 'wishingWell/toss' }),
+  snapPostcard: (
+    title: string,
+    filter: 'vintage' | 'polaroid' | 'warm_sun' | 'misty_dusk',
+    caption: string,
+  ): Action => ({ type: 'camera/snap', title, filter, caption }),
   petCat: (): Action => ({ type: 'cat/pet' }),
   fulfillVisitor: (): Action => ({ type: 'visitor/fulfill' }),
   updateSettings: (patch: Partial<Settings>): Action => ({ type: 'settings/update', patch }),

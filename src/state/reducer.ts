@@ -1,4 +1,5 @@
 import { checkAchievements, unlockAchievement } from '../core/rules/achievements';
+import { harvestHoney, restHammock, toggleCampfire } from '../core/rules/beekeeping';
 import { petCat } from '../core/rules/cat';
 import { cook, eatFish, eatMeal } from '../core/rules/cooking';
 import { cottageActivity } from '../core/rules/cottage';
@@ -13,6 +14,7 @@ import {
   sellFruit,
 } from '../core/rules/economy';
 import { expandPlot } from '../core/rules/expansion';
+import { readBeachBottle, serveFarmstandOrder } from '../core/rules/farmstand';
 import { useTool } from '../core/rules/farming';
 import { fish } from '../core/rules/fishing';
 import { forageItem } from '../core/rules/foraging';
@@ -20,7 +22,14 @@ import { chain, ok } from '../core/rules/outcome';
 import { adoptPet, petAnimal } from '../core/rules/pets';
 import { cycleSeed, moveTo, selectSeed, selectTool, updateSettings } from '../core/rules/player';
 import { harvestOrchard, unlockIslet } from '../core/rules/progression';
+import {
+  snapPostcard,
+  stargazeTelescope,
+  tossWishingWell,
+  unlockGreenhouse,
+} from '../core/rules/stargazing';
 import { fulfillVisitor, giftVisitor } from '../core/rules/visitors';
+import { changeHat, changeOutfit, setPetAccessory } from '../core/rules/wardrobe';
 import type { GameState, Outcome } from '../core/types';
 import type { Action } from './actions';
 
@@ -72,12 +81,36 @@ export const reducer = (state: GameState, action: Action): Outcome => {
         return giftVisitor(state, action.recipe);
       case 'islet/unlock':
         return unlockIslet(state);
+      case 'greenhouse/unlock':
+        return unlockGreenhouse(state);
       case 'orchard/harvest':
         return harvestOrchard(state);
       case 'pet/adopt':
         return adoptPet(state, action.pet);
       case 'pet/interact':
         return petAnimal(state, action.pet);
+      case 'pet/setAccessory':
+        return setPetAccessory(state, action.pet, action.accessory);
+      case 'wardrobe/changeOutfit':
+        return changeOutfit(state, action.outfit);
+      case 'wardrobe/changeHat':
+        return changeHat(state, action.hat);
+      case 'beekeeping/harvestHoney':
+        return harvestHoney(state);
+      case 'campfire/toggle':
+        return toggleCampfire(state);
+      case 'hammock/rest':
+        return restHammock(state);
+      case 'farmstand/serve':
+        return serveFarmstandOrder(state, action.orderId);
+      case 'bottle/read':
+        return readBeachBottle(state);
+      case 'telescope/stargaze':
+        return stargazeTelescope(state);
+      case 'wishingWell/toss':
+        return tossWishingWell(state);
+      case 'camera/snap':
+        return snapPostcard(state, action.title, action.filter, action.caption);
       case 'music/setTrack':
         return chain(
           ok(

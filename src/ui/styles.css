@@ -443,6 +443,10 @@ input:focus-visible {
 }
 
 /* Dialogs */
+dialog:not([open]) {
+  display: none !important;
+}
+
 dialog.panel {
   border: 1px solid var(--border);
   padding: 16px;

@@ -1,6 +1,8 @@
 import { soundForEvent } from '../audio/sounds';
 import { createSoundEngine, type SoundEngine } from '../audio/SoundEngine';
+import { FISH } from '../core/config';
 import { createInitialState } from '../core/initialState';
+import type { FishId } from '../core/types';
 import { cellToTileIndex } from '../core/world';
 import { bindGamepad } from '../input/gamepad';
 import { bindKeyboard, cameraRelativeStep, type Command } from '../input/keyboard';
@@ -120,7 +122,7 @@ export const createGame = ({
     onShop: () => void controller.goToMarket(),
     onJournal: () => ui.journal.show(),
     onCook: () => ui.cook.show(),
-    onFish: () => ui.fish.show(),
+    onFish: () => void triggerFishing(),
     onPhotoMode: () => ui.photo.enter(),
     onExport: () => exportSave(store.getState()),
     onImport: (file) => {
@@ -150,13 +152,26 @@ export const createGame = ({
       : {}),
   });
 
+  const triggerFishing = async (): Promise<void> => {
+    sound.play('water');
+    const events = store.dispatch(actions.fish());
+    const caught = events.find((e) => e.type === 'fish-caught') as
+      { type: 'fish-caught'; fish: FishId } | undefined;
+    if (caught) {
+      const def = FISH[caught.fish];
+      ui.toasts.show(`🎣 Caught a ${def.name}! (+${def.bloomPoints} Bloom)`, 'good');
+    }
+    sound.play('harvest');
+    await renderer.player.catchFishReact();
+  };
+
   const controller = new InteractionController({
     store,
     mover: renderer.player,
     onOpenShop: () => ui.shop.open(),
     onVisitor: () => ui.visitor.highlight(),
     onCottage: () => ui.cook.show(),
-    onPond: () => ui.fish.show(),
+    onPond: () => void triggerFishing(),
     onPetCat: () => {
       store.dispatch(actions.petCat());
       void renderer.player.petCatReact();

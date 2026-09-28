@@ -1,17 +1,20 @@
 import { soundForEvent } from '../audio/sounds';
 import { createSoundEngine, type SoundEngine } from '../audio/SoundEngine';
 import { createInitialState } from '../core/initialState';
+import { cellToTileIndex } from '../core/world';
+import { bindGamepad } from '../input/gamepad';
 import { bindKeyboard, cameraRelativeStep, type Command } from '../input/keyboard';
-import { createSaveManager, type SaveManager } from '../persistence/saveManager';
 import { exportSave, importSave } from '../persistence/saveFile';
+import { createSaveManager, type SaveManager } from '../persistence/saveManager';
 import { createMemoryStorage, type StorageAdapter } from '../persistence/storage';
-import type { AbstractEngine, ArcRotateCamera } from '../render/babylon';
-import { DEFAULT_ALPHA } from '../render/CameraRig';
+import type { AbstractEngine } from '../render/babylon';
+import { type IslandCamera } from '../render/CameraRig';
 import { createGameRenderer, type GameRenderer } from '../render/GameRenderer';
+import { attachPicker } from '../render/Picker';
 import { createSceneContext, type SceneContext } from '../render/SceneContext';
 import { actions } from '../state/actions';
 import { reducer } from '../state/reducer';
-import { selectSettings } from '../state/selectors';
+import { selectSettings, selectWeather } from '../state/selectors';
 import { createStore, type Store } from '../state/store';
 import { mountUI, type GameUI } from '../ui/mountUI';
 import type { ErrorReporter } from './errorReporting';
@@ -53,10 +56,6 @@ export interface Game {
   dispose(): void;
 }
 
-/**
- * Composition root: builds the store, renderer, UI, input, audio and saving, and
- * wires them together. Each piece only knows about the store and its own job.
- */
 export const createGame = ({
   engine,
   canvas,
@@ -94,9 +93,13 @@ export const createGame = ({
       controller.cancel();
       ui.closeTop();
       sound.play('sleep');
+      sound.setAmbience(store.getState().weather, 'dusk');
       await renderer.setTimeOfDay('dusk');
+      // Longer dreamy cozy night pause under the night sky with crickets
+      await ctx.tweener.wait(0.8);
       await ui.dayOverlay.cover(`Day ${store.getState().day + 1}`);
       store.dispatch(actions.sleep());
+      sound.setAmbience(store.getState().weather, 'day');
       renderer.lighting.set('day');
       await ui.dayOverlay.reveal();
     } finally {
@@ -112,8 +115,13 @@ export const createGame = ({
   };
 
   const ui = mountUI(uiRoot, store, {
+    canvas,
     onSleep: () => void sleep(),
     onShop: () => void controller.goToMarket(),
+    onJournal: () => ui.journal.show(),
+    onCook: () => ui.cook.show(),
+    onFish: () => ui.fish.show(),
+    onPhotoMode: () => ui.photo.enter(),
     onExport: () => exportSave(store.getState()),
     onImport: (file) => {
       void importSave(file).then((r) => {
@@ -147,10 +155,36 @@ export const createGame = ({
     mover: renderer.player,
     onOpenShop: () => ui.shop.open(),
     onVisitor: () => ui.visitor.highlight(),
+    onCottage: () => ui.cook.show(),
+    onPond: () => ui.fish.show(),
+    onPetCat: () => {
+      store.dispatch(actions.petCat());
+      void renderer.player.petCatReact();
+    },
   });
-  renderer.onCellPicked((cell) => void controller.clickCell(cell));
 
-  const camera = ctx.scene.activeCamera as ArcRotateCamera | null;
+  const camera = ctx.scene.activeCamera as IslandCamera | null;
+
+  const detachPicker = attachPicker(ctx.scene, {
+    onTap: (cell) => void controller.clickCell(cell),
+    onHover: (cell) => {
+      if (!cell) {
+        renderer.plot.setHoveredTile(null);
+        return;
+      }
+      const idx = cellToTileIndex(cell);
+      const s = store.getState();
+      renderer.plot.setHoveredTile(idx >= 0 ? idx : null, s.selectedTool, s.selectedSeed);
+    },
+    onDoubleTap: () => {
+      camera?.focusFarmer?.({
+        x: renderer.player.position.x,
+        y: 0,
+        z: renderer.player.position.z,
+      });
+    },
+  });
+
   const handleCommand = (c: Command): void => {
     switch (c.type) {
       case 'tool':
@@ -160,7 +194,7 @@ export const createGame = ({
         store.dispatch(actions.cycleSeed(c.direction));
         break;
       case 'move': {
-        const { dx, dz } = cameraRelativeStep(c.forward, c.right, camera?.alpha ?? DEFAULT_ALPHA);
+        const { dx, dz } = cameraRelativeStep(c.forward, c.right, camera?.alpha ?? 0);
         void controller.step(dx, dz);
         break;
       }
@@ -189,18 +223,28 @@ export const createGame = ({
     (s) => {
       sound.setMuted(s.muted);
       sound.setVolume(s.volume);
+      sound.setMusicVolume(s.musicVolume ?? 0.4);
     },
     { fireImmediately: true },
   );
+
+  const offWeather = store.select(
+    selectWeather,
+    (w) => sound.setAmbience(w, renderer.lighting.timeOfDay),
+    { fireImmediately: true },
+  );
+
   const offSound = store.onEvent((e) => {
     const name = soundForEvent(e);
     if (name) sound.play(name);
   });
+
   const unlockAudio = (): void => sound.unlock();
   uiRoot.ownerDocument.addEventListener('pointerdown', unlockAudio);
   uiRoot.ownerDocument.addEventListener('keydown', unlockAudio);
 
   const offKeys = bindKeyboard(keyboardTarget, handleCommand);
+  const offGamepad = bindGamepad(handleCommand);
   const offSave = saves.attach(store);
   const flush = (): void => saves.flush();
   const onVisibility = (): void => {
@@ -225,9 +269,12 @@ export const createGame = ({
     dispose: () => {
       flush();
       offKeys();
+      offGamepad();
       offSave();
       offSettings();
+      offWeather();
       offSound();
+      detachPicker();
       uiRoot.ownerDocument.removeEventListener('pointerdown', unlockAudio);
       uiRoot.ownerDocument.removeEventListener('keydown', unlockAudio);
       uiRoot.ownerDocument.removeEventListener('visibilitychange', onVisibility);

@@ -100,8 +100,8 @@ export const createShopPanel = (store: Store): ShopPanel => {
       );
     });
 
-  const renderDecor = (s: GameState): HTMLElement[] =>
-    DECORATION_IDS.map((d) => {
+  const renderDecor = (s: GameState): HTMLElement[] => {
+    const items = DECORATION_IDS.map((d) => {
       const def = DECORATIONS[d];
       const owned = s.decorations.includes(d);
       return row(
@@ -115,6 +115,25 @@ export const createShopPanel = (store: Store): ShopPanel => {
         ),
       );
     });
+
+    if (s.plot.height < 7) {
+      const nextHeight = s.plot.height + 1;
+      const cost = nextHeight === 5 ? 50 : nextHeight === 6 ? 100 : 180;
+      const reqBloom = nextHeight === 5 ? 20 : nextHeight === 6 ? 45 : 70;
+      const canExpand = s.bloom >= reqBloom && s.coins >= cost;
+      items.unshift(
+        row(
+          `🏡 Expand Garden (Row ${nextHeight})`,
+          s.bloom < reqBloom
+            ? `Requires ${reqBloom} Bloom points`
+            : `${cost} coins · +5 bloom points`,
+          btn('Expand', () => store.dispatch(actions.expandPlot()), !canExpand, 'expand-plot'),
+        ),
+      );
+    }
+
+    return items;
+  };
 
   const renderSell = (s: GameState): HTMLElement[] => {
     const rows = CROP_IDS.filter((c) => s.inventory.produce[c] > 0).map((c) =>

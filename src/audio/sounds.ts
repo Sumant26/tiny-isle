@@ -11,7 +11,13 @@ export type SoundName =
   | 'levelup'
   | 'visitor'
   | 'sleep'
-  | 'click';
+  | 'click'
+  | 'purr'
+  | 'cook'
+  | 'fish_bite'
+  | 'fish_catch'
+  | 'achievement'
+  | 'expand';
 
 export interface Note {
   /** Hz */
@@ -63,6 +69,38 @@ export const RECIPES: Readonly<Record<SoundName, readonly Note[]>> = {
     { freq: 330, duration: 0.6, delay: 0.35, type: 'sine', gain: 0.12 },
   ],
   click: [{ freq: 1200, duration: 0.03, type: 'sine', gain: 0.1 }],
+  purr: [
+    { freq: 90, duration: 0.2, type: 'triangle', gain: 0.15 },
+    { freq: 110, duration: 0.2, delay: 0.15, type: 'sine', gain: 0.12 },
+    { freq: 95, duration: 0.25, delay: 0.3, type: 'triangle', gain: 0.1 },
+  ],
+  cook: [
+    { freq: 600, duration: 0.2, noise: true, gain: 0.15 },
+    { freq: 880, duration: 0.1, delay: 0.15, type: 'sine', gain: 0.2 },
+    { freq: 1174, duration: 0.25, delay: 0.25, type: 'triangle', gain: 0.22 },
+  ],
+  fish_bite: [
+    { freq: 350, duration: 0.08, type: 'sine', gain: 0.25, slideTo: 180 },
+    { freq: 1200, duration: 0.15, delay: 0.05, noise: true, gain: 0.18 },
+  ],
+  fish_catch: [
+    { freq: 523, duration: 0.1, type: 'sine', gain: 0.2 },
+    { freq: 659, duration: 0.12, delay: 0.08, type: 'sine', gain: 0.2 },
+    { freq: 784, duration: 0.15, delay: 0.16, type: 'triangle', gain: 0.22 },
+    { freq: 1046, duration: 0.3, delay: 0.26, type: 'triangle', gain: 0.25 },
+  ],
+  achievement: [
+    { freq: 587, duration: 0.15, type: 'triangle', gain: 0.2 },
+    { freq: 740, duration: 0.15, delay: 0.12, type: 'triangle', gain: 0.2 },
+    { freq: 880, duration: 0.18, delay: 0.24, type: 'triangle', gain: 0.22 },
+    { freq: 1174, duration: 0.45, delay: 0.38, type: 'sine', gain: 0.25 },
+  ],
+  expand: [
+    { freq: 261, duration: 0.2, type: 'triangle', gain: 0.2 },
+    { freq: 329, duration: 0.25, delay: 0.15, type: 'triangle', gain: 0.2 },
+    { freq: 392, duration: 0.3, delay: 0.3, type: 'sine', gain: 0.25 },
+    { freq: 523, duration: 0.5, delay: 0.45, type: 'sine', gain: 0.25 },
+  ],
 };
 
 export const soundForEvent = (event: GameEvent): SoundName | null => {
@@ -81,6 +119,16 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
     case 'bought-seeds':
     case 'bought-decoration':
       return 'buy';
+    case 'plot-expanded':
+      return 'expand';
+    case 'cooked':
+      return 'cook';
+    case 'fish-caught':
+      return 'fish_catch';
+    case 'pet-cat':
+      return 'purr';
+    case 'achievement-unlocked':
+      return 'achievement';
     case 'rejected':
       return 'reject';
     case 'bloom-level-up':
@@ -90,6 +138,7 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
     case 'day-started':
     case 'moved':
     case 'crop-unlocked':
+    case 'journal-entry':
       return null;
   }
 };

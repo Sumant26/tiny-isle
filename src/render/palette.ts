@@ -59,4 +59,5 @@ export const PALETTE = {
   butterfly: ['#F7B6C2', '#C9B6F0', '#FFE08A'],
   gnomeHat: '#D9534F',
   stoneGrey: '#C8C3B8',
+  highlight: '#FFF3C2',
 } as const;

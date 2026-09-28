@@ -15,6 +15,35 @@ describe('migrate', () => {
     expect(r).toEqual({ ok: true, value: { n: 20, v2: true } });
   });
 
+  it('migrates v1 save to v2 save', () => {
+    const v1State = {
+      day: 1,
+      coins: 20,
+      plot: { width: 6, height: 4, tiles: [] },
+      player: { x: 7, z: 9 },
+      selectedTool: 'hoe',
+      selectedSeed: 'carrot',
+      inventory: { seeds: { carrot: 6 }, produce: {} },
+      unlockedCrops: ['carrot'],
+      decorations: [],
+      bloom: 0,
+      visitor: null,
+      visitorsHelped: [],
+      weather: 'clear',
+      rngSeed: 1234,
+      settings: { muted: false, volume: 0.6 },
+      stats: { harvested: 0, earned: 0 },
+    };
+    const result = migrate(v1State, 1);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.season).toBe('spring');
+      expect(result.value.achievements).toEqual([]);
+      expect(result.value.journal).toEqual(['Arrived on the peaceful Tiny Isle.']);
+      expect((result.value.settings as Record<string, unknown>).highContrast).toBe(false);
+    }
+  });
+
   it('fails on missing migrations, bad versions and future saves', () => {
     expect(migrate({}, 1, 2, {})).toEqual({ ok: false, error: 'no migration from v1' });
     expect(migrate({}, 0).ok).toBe(false);

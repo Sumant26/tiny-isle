@@ -1,5 +1,5 @@
 import { cropStage } from '../../core/plot';
-import type { CropStage, Tile } from '../../core/types';
+import type { CropId, CropStage, Tile, ToolId } from '../../core/types';
 import { cellToWorld, tileIndexToCell } from '../../core/world';
 import { selectTiles } from '../../state/selectors';
 import type { Store } from '../../state/store';
@@ -82,6 +82,61 @@ export class PlotView {
       return f;
     });
     return { root, soil, furrows, crop: null, cropKey: null };
+  }
+
+  private highlight: Mesh | null = null;
+  private ghostPreview: TransformNode | null = null;
+  private currentHoverIndex: number | null = null;
+
+  private createHighlight(): void {
+    const { scene, shape } = this.ctx;
+    this.highlight = shape(
+      CreateBox('tileHighlight', { width: 0.98, depth: 0.98, height: 0.04 }, scene),
+      PALETTE.highlight,
+      {
+        parent: this.root,
+        castShadow: false,
+        pickable: false,
+      },
+    );
+    this.highlight.position.y = 0.08;
+    this.highlight.setEnabled(false);
+  }
+
+  setHoveredTile(index: number | null, tool: ToolId = 'hoe', seed: CropId = 'carrot'): void {
+    if (this.currentHoverIndex === index) return;
+    this.currentHoverIndex = index;
+
+    if (this.ghostPreview) {
+      this.ghostPreview.dispose();
+      this.ghostPreview = null;
+    }
+
+    if (index === null || !this.visuals[index]) {
+      this.highlight?.setEnabled(false);
+      return;
+    }
+
+    const v = this.visuals[index];
+    if (!this.highlight) this.createHighlight();
+    if (this.highlight) {
+      this.highlight.position.set(v.root.position.x, GROUND_Y + 0.08, v.root.position.z);
+      this.highlight.setEnabled(true);
+    }
+
+    // Create a ghost preview depending on selected tool
+    const { scene } = this.ctx;
+    const ghost = new TransformNode('ghostPreview', scene);
+    ghost.position.set(v.root.position.x, GROUND_Y + 0.1, v.root.position.z);
+    ghost.parent = this.root;
+
+    if (tool === 'seeds' && !v.crop) {
+      const cropGhost = buildCrop(this.ctx, seed, 'seed');
+      cropGhost.parent = ghost;
+      cropGhost.scaling.setAll(0.8);
+    }
+
+    this.ghostPreview = ghost;
   }
 
   private sync(index: number, tile: Tile, animate: boolean): void {

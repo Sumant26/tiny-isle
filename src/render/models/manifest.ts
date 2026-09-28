@@ -27,6 +27,8 @@ export const MODEL_KEYS: readonly string[] = [
   ...VISITORS.map((v) => `visitor/${v.id}`),
   'prop/tree',
   'prop/market',
+  'prop/cottage',
+  'char/farmer',
   'pet/cat',
 ];
 

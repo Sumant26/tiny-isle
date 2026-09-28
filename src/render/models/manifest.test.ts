@@ -7,8 +7,16 @@ describe('MODEL_KEYS', () => {
     expect(MODEL_KEYS).toContain('crop/pumpkin/seed');
     expect(MODEL_KEYS).toContain('decoration/gnome');
     expect(MODEL_KEYS).toContain('visitor/hazel');
-    expect(MODEL_KEYS).toEqual(expect.arrayContaining(['prop/tree', 'prop/market', 'pet/cat']));
-    expect(MODEL_KEYS).toHaveLength(5 * 4 + 5 + 3 + 3);
+    expect(MODEL_KEYS).toEqual(
+      expect.arrayContaining([
+        'prop/tree',
+        'prop/market',
+        'pet/cat',
+        'char/farmer',
+        'prop/cottage',
+      ]),
+    );
+    expect(MODEL_KEYS).toHaveLength(5 * 4 + 5 + 3 + 3 + 2);
   });
 });
 

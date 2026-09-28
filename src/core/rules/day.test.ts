@@ -43,7 +43,12 @@ describe('sleep', () => {
       crop: { id: 'carrot', growth: 1 },
     });
     expect(r.state.rngSeed).not.toBe(s.rngSeed);
-    expect(r.events[0]).toEqual({ type: 'day-started', day: 2, weather: 'clear' });
+    expect(r.events[0]).toEqual({
+      type: 'day-started',
+      day: 2,
+      weather: 'clear',
+      season: 'spring',
+    });
   });
 
   it('rain waters every tilled tile in the morning', () => {

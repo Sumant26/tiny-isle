@@ -1,6 +1,6 @@
 import { findPath, findPathToNeighbor, type WalkableFn } from '../core/pathfinding';
 import type { Cell, ToolId } from '../core/types';
-import { cellToTileIndex, isMarketCell, isWalkable, LAYOUT, sameCell } from '../core/world';
+import { cellToTileIndex, inRect, isMarketCell, isWalkable, LAYOUT, sameCell } from '../core/world';
 import type { Mover } from '../render/views/PlayerView';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
@@ -21,6 +21,9 @@ export interface InteractionDeps {
   walkable?: WalkableFn;
   onOpenShop?: () => void;
   onVisitor?: () => void;
+  onCottage?: () => void;
+  onPond?: () => void;
+  onPetCat?: () => void;
 }
 
 /**
@@ -66,6 +69,29 @@ export class InteractionController {
     const player = store.getState().player;
 
     if (isMarketCell(cell)) return this.goToMarket(signal);
+
+    // Cottage Kitchen
+    if (inRect(cell, LAYOUT.cottage)) {
+      const path = findPathToNeighbor(player, cell, this.walkable);
+      if (!path) return 'unreachable';
+      if (!(await this.walkPath(path, signal))) return 'cancelled';
+      this.deps.onCottage?.();
+      return 'shop';
+    }
+
+    // Pond Fishing
+    if (inRect(cell, LAYOUT.pond)) {
+      const path = findPathToNeighbor(player, cell, this.walkable);
+      if (!path) return 'unreachable';
+      if (!(await this.walkPath(path, signal))) return 'cancelled';
+      this.deps.onPond?.();
+      return 'shop';
+    }
+
+    // Pet the cat if clicked near player / cat
+    if (Math.hypot(cell.x - player.x, cell.z - player.z) <= 1.5 && Math.random() < 0.2) {
+      this.deps.onPetCat?.();
+    }
 
     const visitor = store.getState().visitor;
     if (visitor && sameCell(cell, LAYOUT.visitorSpot)) {

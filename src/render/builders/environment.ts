@@ -97,38 +97,45 @@ const buildCottage = (ctx: SceneContext, root: TransformNode): Mesh => {
   node.parent = root;
   const c = rectCenterWorld(LAYOUT.cottage);
   node.position.set(c.x, GROUND_Y, c.z);
-  const o = { parent: node };
-  shape(
-    CreateBox('walls', { width: 2.2, depth: 1.9, height: 1.6 }, scene),
-    PALETTE.cream,
-    o,
-  ).position.y = 0.8;
-  for (const side of [-1, 1]) {
-    const r = shape(
-      CreateBox('roof', { width: 2.6, depth: 1.45, height: 0.14 }, scene),
-      PALETTE.roof,
-      o,
-    );
-    r.rotation.x = side * 0.62;
-    r.position.set(0, 1.95, side * 0.56);
-  }
-  shape(
-    CreateBox('door', { width: 0.5, depth: 0.08, height: 0.9 }, scene),
-    PALETTE.woodDark,
-    o,
-  ).position.set(0.35, 0.45, 0.96);
-  const win = shape(
+
+  const windowMesh = shape(
     CreateBox('window', { width: 0.5, depth: 0.08, height: 0.45 }, scene),
     ctx.material(PALETTE.window, '#000000'),
-    o,
+    { parent: node },
   );
-  win.position.set(-0.5, 0.95, 0.96);
-  shape(
-    CreateBox('chimney', { width: 0.3, depth: 0.3, height: 0.7 }, scene),
-    PALETTE.dirt,
-    o,
-  ).position.set(0.6, 2.3, -0.3);
-  return win;
+  windowMesh.position.set(-0.5, 0.95, 0.96);
+
+  const model = ctx.model('prop/cottage', () => {
+    const proc = new TransformNode('cottageProcedural', scene);
+    const o = { parent: proc };
+    shape(
+      CreateBox('walls', { width: 2.2, depth: 1.9, height: 1.6 }, scene),
+      PALETTE.cream,
+      o,
+    ).position.y = 0.8;
+    for (const side of [-1, 1]) {
+      const r = shape(
+        CreateBox('roof', { width: 2.6, depth: 1.45, height: 0.14 }, scene),
+        PALETTE.roof,
+        o,
+      );
+      r.rotation.x = side * 0.62;
+      r.position.set(0, 1.95, side * 0.56);
+    }
+    shape(
+      CreateBox('door', { width: 0.5, depth: 0.08, height: 0.9 }, scene),
+      PALETTE.woodDark,
+      o,
+    ).position.set(0.35, 0.45, 0.96);
+    shape(
+      CreateBox('chimney', { width: 0.3, depth: 0.3, height: 0.7 }, scene),
+      PALETTE.dirt,
+      o,
+    ).position.set(0.6, 2.3, -0.3);
+    return proc;
+  });
+  model.parent = node;
+  return windowMesh;
 };
 
 const buildTree = (ctx: SceneContext, root: TransformNode): TransformNode => {

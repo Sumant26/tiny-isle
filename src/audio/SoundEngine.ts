@@ -1,11 +1,16 @@
+import type { Weather } from '../core/types';
 import { type Note, RECIPES, type SoundName } from './sounds';
+
+export type TimeOfDay = 'day' | 'dusk' | 'night';
 
 export interface SoundEngine {
   /** Browsers only allow audio after a user gesture; call from a click/keydown. */
   unlock(): void;
   play(name: SoundName): void;
   setVolume(volume: number): void;
+  setMusicVolume(volume: number): void;
   setMuted(muted: boolean): void;
+  setAmbience(weather: Weather, timeOfDay: TimeOfDay): void;
   readonly ready: boolean;
   dispose(): void;
 }
@@ -13,29 +18,49 @@ export interface SoundEngine {
 export interface SoundEngineOptions {
   createContext?: () => AudioContext;
   volume?: number;
+  musicVolume?: number;
   muted?: boolean;
 }
 
 export const createSoundEngine = ({
   createContext = () => new AudioContext(),
   volume = 0.6,
+  musicVolume = 0.4,
   muted = false,
 }: SoundEngineOptions = {}): SoundEngine => {
   let ctx: AudioContext | null = null;
   let master: GainNode | null = null;
+  let musicGain: GainNode | null = null;
+  let ambientGain: GainNode | null = null;
   let noiseBuffer: AudioBuffer | null = null;
   let vol = volume;
+  let musicVol = musicVolume;
   let mute = muted;
+
+  let musicInterval: ReturnType<typeof setInterval> | null = null;
+  let cricketInterval: ReturnType<typeof setInterval> | null = null;
+  let rainSource: AudioBufferSourceNode | null = null;
+  let rainFilter: BiquadFilterNode | null = null;
+  let currentWeather: Weather = 'clear';
+  let currentTimeOfDay: TimeOfDay = 'day';
 
   const applyGain = (): void => {
     if (master) master.gain.value = mute ? 0 : vol;
+    if (musicGain) musicGain.gain.value = mute ? 0 : musicVol;
+    if (ambientGain) ambientGain.gain.value = mute ? 0 : vol * 0.5;
   };
 
   const getNoise = (c: AudioContext): AudioBuffer => {
     if (!noiseBuffer) {
-      noiseBuffer = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate);
+      noiseBuffer = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
       const data = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      let lastOut = 0.0;
+      for (let i = 0; i < data.length; i++) {
+        const white = Math.random() * 2 - 1;
+        // Pink-like smooth noise
+        lastOut = (lastOut + 0.02 * white) / 1.02;
+        data[i] = lastOut * 3.5;
+      }
     }
     return noiseBuffer;
   };
@@ -69,6 +94,89 @@ export const createSoundEngine = ({
     osc.stop(end + 0.02);
   };
 
+  // Pentatonic scale frequencies for gentle procedural background music
+  const PENTATONIC = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99];
+
+  const startGenerativeMusic = (): void => {
+    if (musicInterval) return;
+    let step = 0;
+    musicInterval = setInterval(() => {
+      if (!ctx || !musicGain || mute || musicVol <= 0) return;
+      // Play a calm note every few beats
+      step++;
+      if (step % 2 === 0) {
+        const freq = PENTATONIC[Math.floor(Math.random() * PENTATONIC.length)] ?? 261.63;
+        const duration = 1.2 + Math.random() * 0.8;
+        playNote(ctx, musicGain, {
+          freq,
+          duration,
+          type: 'sine',
+          gain: 0.06,
+        });
+      }
+    }, 1400);
+  };
+
+  const updateAmbienceAudio = (): void => {
+    if (!ctx || !ambientGain) return;
+
+    // Rain noise loop
+    if (currentWeather === 'rain') {
+      if (!rainSource) {
+        try {
+          rainSource = ctx.createBufferSource();
+          rainSource.buffer = getNoise(ctx);
+          rainSource.loop = true;
+          rainFilter = ctx.createBiquadFilter();
+          rainFilter.type = 'lowpass';
+          rainFilter.frequency.value = 800;
+          rainSource.connect(rainFilter);
+          rainFilter.connect(ambientGain);
+          rainSource.start();
+        } catch {
+          // ignore if unavailable
+        }
+      }
+    } else {
+      if (rainSource) {
+        try {
+          rainSource.stop();
+          rainSource.disconnect();
+        } catch {
+          // ignore
+        }
+        rainSource = null;
+        rainFilter = null;
+      }
+    }
+
+    // Crickets at dusk / night
+    if (currentTimeOfDay === 'dusk' || currentTimeOfDay === 'night') {
+      cricketInterval ??= setInterval(() => {
+        if (!ctx || !ambientGain || mute) return;
+        // Cricket chirp
+        playNote(ctx, ambientGain, {
+          freq: 4600,
+          duration: 0.04,
+          type: 'sine',
+          gain: 0.025,
+        });
+        playNote(ctx, ambientGain, {
+          freq: 4800,
+          duration: 0.04,
+          delay: 0.05,
+          type: 'sine',
+          gain: 0.025,
+        });
+      }, 2200);
+    } else {
+      if (cricketInterval) {
+        clearInterval(cricketInterval);
+        cricketInterval = null;
+      }
+    }
+  };
+
   return {
     get ready() {
       return ctx !== null;
@@ -81,8 +189,16 @@ export const createSoundEngine = ({
       try {
         ctx = createContext();
         master = ctx.createGain();
+        musicGain = ctx.createGain();
+        ambientGain = ctx.createGain();
+
         master.connect(ctx.destination);
+        musicGain.connect(master);
+        ambientGain.connect(master);
+
         applyGain();
+        startGenerativeMusic();
+        updateAmbienceAudio();
       } catch {
         ctx = null; // Audio unsupported: the game stays silent rather than failing.
       }
@@ -95,14 +211,34 @@ export const createSoundEngine = ({
       vol = Math.min(1, Math.max(0, v));
       applyGain();
     },
+    setMusicVolume: (v) => {
+      musicVol = Math.min(1, Math.max(0, v));
+      applyGain();
+    },
     setMuted: (m) => {
       mute = m;
       applyGain();
     },
+    setAmbience: (weather, timeOfDay) => {
+      currentWeather = weather;
+      currentTimeOfDay = timeOfDay;
+      updateAmbienceAudio();
+    },
     dispose: () => {
+      if (musicInterval) clearInterval(musicInterval);
+      if (cricketInterval) clearInterval(cricketInterval);
+      if (rainSource) {
+        try {
+          rainSource.stop();
+        } catch {
+          // ignore
+        }
+      }
       void ctx?.close();
       ctx = null;
       master = null;
+      musicGain = null;
+      ambientGain = null;
     },
   };
 };

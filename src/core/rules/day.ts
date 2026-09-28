@@ -1,9 +1,14 @@
-import { BALANCE } from '../config';
+import { BALANCE, SEASON_LENGTH } from '../config';
 import { isRipe, mapTiles } from '../plot';
 import { nextRandom } from '../rng';
-import type { GameState, Outcome, Tile } from '../types';
+import type { GameState, Outcome, Season, Tile } from '../types';
 import { chain, ok } from './outcome';
 import { maybeVisitorArrives } from './visitors';
+
+export const getSeasonForDay = (day: number): Season => {
+  const s = Math.floor((day - 1) / SEASON_LENGTH) % 3;
+  return s === 0 ? 'spring' : s === 1 ? 'summer' : 'autumn';
+};
 
 /** Overnight: watered crops grow one step, then all soil dries out. */
 export const growOvernight = (tile: Tile): Tile => {
@@ -23,10 +28,11 @@ export const sleep = (state: GameState): Outcome => {
   const weather = roll.value < BALANCE.rainChance ? 'rain' : 'clear';
   const plot = weather === 'rain' ? mapTiles(grown, rainWater) : grown;
   const day = state.day + 1;
+  const season = getSeasonForDay(day);
   return chain(
     ok(
-      { ...state, plot, day, weather, rngSeed: roll.nextSeed },
-      { type: 'day-started', day, weather },
+      { ...state, plot, day, season, weather, rngSeed: roll.nextSeed },
+      { type: 'day-started', day, weather, season },
     ),
     maybeVisitorArrives,
   );

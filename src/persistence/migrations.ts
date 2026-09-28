@@ -1,15 +1,41 @@
 import type { Result } from './schema';
 
 /** Bump when the saved state shape changes, and add a migration from the previous version. */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export type Migration = (state: Record<string, unknown>) => Record<string, unknown>;
 
 /**
- * migrations[n] upgrades a version-n save to version n+1. Example for a future v2:
- *   1: (s) => ({ ...s, pets: [] }),
+ * migrations[n] upgrades a version-n save to version n+1.
  */
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  1: (s) => ({
+    ...s,
+    season: 'spring',
+    cookedInventory: {},
+    fishInventory: {},
+    unlockedRecipes: ['carrot_soup'],
+    catHappiness: 0,
+    achievements: [],
+    journal: ['Arrived on the peaceful Tiny Isle.'],
+    settings: {
+      ...(typeof s.settings === 'object' && s.settings !== null
+        ? s.settings
+        : { muted: false, volume: 0.6 }),
+      musicVolume: 0.5,
+      highContrast: false,
+      largeText: false,
+      colorblindMode: false,
+      language: 'en',
+    },
+    stats: {
+      ...(typeof s.stats === 'object' && s.stats !== null ? s.stats : { harvested: 0, earned: 0 }),
+      cooked: 0,
+      fishCaught: 0,
+      catPets: 0,
+    },
+  }),
+};
 
 export const migrate = (
   state: Record<string, unknown>,

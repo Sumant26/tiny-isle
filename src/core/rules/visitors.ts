@@ -38,14 +38,23 @@ export const fulfillVisitor = (state: GameState): Outcome => {
   const { crop, quantity } = def.wants;
   if (state.inventory.produce[crop] < quantity) return reject(state, 'not-enough-produce');
 
+  const journal = state.journal ?? [];
+  const entry = `Helped ${def.name} with ${quantity} ${crop}(s). ${def.thanks}`;
+  const nextJournal = journal.includes(entry) ? journal : [...journal, entry];
+
   let next: GameState = {
     ...state,
     coins: state.coins + def.rewardCoins,
     inventory: { ...state.inventory, produce: addCount(state.inventory.produce, crop, -quantity) },
     visitor: null,
     visitorsHelped: [...state.visitorsHelped, def.id],
+    journal: nextJournal,
   };
-  let outcome = ok(next, { type: 'visitor-helped', visitor: def.id, unlocked: def.unlocks });
+  let outcome = ok(
+    next,
+    { type: 'visitor-helped', visitor: def.id, unlocked: def.unlocks },
+    { type: 'journal-entry', entry },
+  );
   if (def.unlocks) {
     const gift = def.unlocks;
     outcome = chain(outcome, (s) => unlockCrop(s, gift));

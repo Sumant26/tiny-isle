@@ -1,4 +1,12 @@
-import type { Cell, CropId, DecorationId, GameState, Settings, ToolId } from '../core/types';
+import type {
+  Cell,
+  CropId,
+  DecorationId,
+  GameState,
+  RecipeId,
+  Settings,
+  ToolId,
+} from '../core/types';
 
 /**
  * Every change to game state goes through one of these serialisable actions.
@@ -16,6 +24,10 @@ export type Action =
   | { readonly type: 'market/sellAll' }
   | { readonly type: 'shop/buySeeds'; readonly crop: CropId; readonly quantity: number }
   | { readonly type: 'shop/buyDecoration'; readonly decoration: DecorationId }
+  | { readonly type: 'shop/expandPlot' }
+  | { readonly type: 'cottage/cook'; readonly recipe: RecipeId }
+  | { readonly type: 'pond/fish' }
+  | { readonly type: 'cat/pet' }
   | { readonly type: 'visitor/fulfill' }
   | { readonly type: 'settings/update'; readonly patch: Partial<Settings> }
   | { readonly type: 'game/load'; readonly state: GameState };
@@ -34,6 +46,10 @@ export const actions = {
   sellAll: (): Action => ({ type: 'market/sellAll' }),
   buySeeds: (crop: CropId, quantity: number): Action => ({ type: 'shop/buySeeds', crop, quantity }),
   buyDecoration: (decoration: DecorationId): Action => ({ type: 'shop/buyDecoration', decoration }),
+  expandPlot: (): Action => ({ type: 'shop/expandPlot' }),
+  cook: (recipe: RecipeId): Action => ({ type: 'cottage/cook', recipe }),
+  fish: (): Action => ({ type: 'pond/fish' }),
+  petCat: (): Action => ({ type: 'cat/pet' }),
   fulfillVisitor: (): Action => ({ type: 'visitor/fulfill' }),
   updateSettings: (patch: Partial<Settings>): Action => ({ type: 'settings/update', patch }),
   load: (state: GameState): Action => ({ type: 'game/load', state }),

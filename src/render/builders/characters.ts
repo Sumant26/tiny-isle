@@ -11,7 +11,32 @@ export interface Farmer {
 export const buildFarmer = (ctx: SceneContext): Farmer => {
   const { scene, shape } = ctx;
   const root = new TransformNode('farmer', scene);
-  const o = { parent: root };
+
+  const can = new TransformNode('can', scene);
+  can.parent = root;
+  can.position.set(0.38, 0.55, 0.2);
+  shape(CreateCylinder('canBody', { diameter: 0.28, height: 0.26 }, scene), PALETTE.can, {
+    parent: can,
+  });
+  const spout = shape(
+    CreateCylinder('spout', { diameterTop: 0.04, diameterBottom: 0.07, height: 0.36 }, scene),
+    PALETTE.can,
+    { parent: can },
+  );
+  spout.position.set(0, 0.05, 0.22);
+  spout.rotation.x = 1.0;
+  can.setEnabled(false);
+
+  const model = ctx.model('char/farmer', () => buildProceduralFarmer(ctx));
+  model.parent = root;
+
+  return { root, can };
+};
+
+const buildProceduralFarmer = (ctx: SceneContext): TransformNode => {
+  const { scene, shape } = ctx;
+  const proc = new TransformNode('farmerProcedural', scene);
+  const o = { parent: proc };
   shape(
     CreateCapsule('body', { height: 0.95, radius: 0.3 }, scene),
     PALETTE.overalls,
@@ -50,21 +75,7 @@ export const buildFarmer = (ctx: SceneContext): Farmer => {
       o,
     ).position.set(x * 1.6, 1.15, 0.25);
   }
-  const can = new TransformNode('can', scene);
-  can.parent = root;
-  can.position.set(0.38, 0.55, 0.2);
-  shape(CreateCylinder('canBody', { diameter: 0.28, height: 0.26 }, scene), PALETTE.can, {
-    parent: can,
-  });
-  const spout = shape(
-    CreateCylinder('spout', { diameterTop: 0.04, diameterBottom: 0.07, height: 0.36 }, scene),
-    PALETTE.can,
-    { parent: can },
-  );
-  spout.position.set(0, 0.05, 0.22);
-  spout.rotation.x = 1.0;
-  can.setEnabled(false);
-  return { root, can };
+  return proc;
 };
 
 export const buildCat = (ctx: SceneContext): TransformNode =>

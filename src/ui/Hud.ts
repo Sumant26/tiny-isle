@@ -1,20 +1,19 @@
 import type { Store } from '../state/store';
-import {
-  selectBloomInfo,
-  selectCoins,
-  selectDay,
-  selectWeather,
-  type BloomInfo,
-} from '../state/selectors';
+import { selectBloomInfo, selectCoins, selectWeather, type BloomInfo } from '../state/selectors';
 import { shallowEqual } from '../state/store';
 import { type Component, h } from './dom';
 
-export const createHud = (
-  store: Store,
-  handlers: { onSettings: () => void; onHelp: () => void },
-): Component => {
+export interface HudHandlers {
+  onSettings: () => void;
+  onHelp: () => void;
+  onJournal?: () => void;
+  onPhotoMode?: () => void;
+}
+
+export const createHud = (store: Store, handlers: HudHandlers): Component => {
   const coins = h('span', { class: 'hud-value', 'data-testid': 'coins' });
   const day = h('span', { class: 'hud-value', 'data-testid': 'day' });
+  const season = h('span', { class: 'hud-small', 'data-testid': 'season-name' }, '🌸 Spring');
   const weather = h('span', { class: 'hud-icon', 'aria-hidden': 'true' });
   const bloomName = h('span', { class: 'hud-small', 'data-testid': 'bloom-name' });
   const bloomFill = h('span', { class: 'bloom-fill' });
@@ -44,9 +43,32 @@ export const createHud = (
     h(
       'div',
       { class: 'pill hud-right' },
+      season,
       weather,
       h('span', {}, 'Day '),
       day,
+      h(
+        'button',
+        {
+          class: 'icon-btn',
+          'aria-label': 'Island Journal',
+          'data-testid': 'journal-button',
+          title: 'Island Journal',
+          onclick: handlers.onJournal,
+        },
+        '📖',
+      ),
+      h(
+        'button',
+        {
+          class: 'icon-btn',
+          'aria-label': 'Photo Mode',
+          'data-testid': 'photo-button',
+          title: 'Photo Mode',
+          onclick: handlers.onPhotoMode,
+        },
+        '📸',
+      ),
       h(
         'button',
         { class: 'icon-btn', 'aria-label': 'How to play', onclick: handlers.onHelp },
@@ -74,7 +96,16 @@ export const createHud = (
 
   const offs = [
     store.select(selectCoins, (c) => (coins.textContent = String(c)), { fireImmediately: true }),
-    store.select(selectDay, (d) => (day.textContent = String(d)), { fireImmediately: true }),
+    store.select(
+      (s) => ({ day: s.day, season: s.season ?? 'spring' }),
+      ({ day: d, season: sea }) => {
+        day.textContent = String(d);
+        const icon = sea === 'spring' ? '🌸' : sea === 'summer' ? '🌻' : '🍂';
+        const name = sea.charAt(0).toUpperCase() + sea.slice(1);
+        season.textContent = `${icon} ${name}`;
+      },
+      { fireImmediately: true, equals: shallowEqual },
+    ),
     store.select(
       selectWeather,
       (w) => {

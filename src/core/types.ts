@@ -51,31 +51,50 @@ export interface ActiveVisitor {
   readonly arrivedOnDay: number;
 }
 
+export type Season = 'spring' | 'summer' | 'autumn';
+export type RecipeId = 'carrot_soup' | 'berry_jam' | 'pumpkin_pie' | 'salad' | 'tomato_pasta';
+export type FishId = 'koi' | 'goldfish' | 'perch' | 'sparklefish';
+
 export interface Settings {
   readonly muted: boolean;
   /** 0..1 */
   readonly volume: number;
+  readonly musicVolume?: number;
+  readonly highContrast?: boolean;
+  readonly largeText?: boolean;
+  readonly colorblindMode?: boolean;
+  readonly language?: string;
 }
 
 export interface Stats {
   readonly harvested: number;
   readonly earned: number;
+  readonly cooked?: number;
+  readonly fishCaught?: number;
+  readonly catPets?: number;
 }
 
 export interface GameState {
   readonly day: number;
+  readonly season?: Season;
   readonly coins: number;
   readonly plot: Plot;
   readonly player: Cell;
   readonly selectedTool: ToolId;
   readonly selectedSeed: CropId;
   readonly inventory: Inventory;
+  readonly cookedInventory?: Readonly<Partial<Record<RecipeId, number>>>;
+  readonly fishInventory?: Readonly<Partial<Record<FishId, number>>>;
   readonly unlockedCrops: readonly CropId[];
+  readonly unlockedRecipes?: readonly RecipeId[];
   readonly decorations: readonly DecorationId[];
   readonly bloom: number;
   readonly visitor: ActiveVisitor | null;
   readonly visitorsHelped: readonly VisitorId[];
   readonly weather: Weather;
+  readonly catHappiness?: number;
+  readonly achievements?: readonly string[];
+  readonly journal?: readonly string[];
   /** Seed for the deterministic PRNG; advanced whenever randomness is consumed. */
   readonly rngSeed: number;
   readonly settings: Settings;
@@ -94,7 +113,9 @@ export type RejectReason =
   | 'locked'
   | 'not-enough-coins'
   | 'not-enough-produce'
+  | 'not-enough-ingredients'
   | 'already-owned'
+  | 'max-size'
   | 'no-visitor'
   | 'blocked'
   | 'out-of-bounds';
@@ -113,7 +134,13 @@ export type GameEvent =
     }
   | { readonly type: 'bought-seeds'; readonly crop: CropId; readonly quantity: number }
   | { readonly type: 'bought-decoration'; readonly decoration: DecorationId }
-  | { readonly type: 'day-started'; readonly day: number; readonly weather: Weather }
+  | { readonly type: 'plot-expanded'; readonly newHeight: number }
+  | {
+      readonly type: 'day-started';
+      readonly day: number;
+      readonly weather: Weather;
+      readonly season?: Season;
+    }
   | { readonly type: 'visitor-arrived'; readonly visitor: VisitorId }
   | {
       readonly type: 'visitor-helped';
@@ -122,6 +149,11 @@ export type GameEvent =
     }
   | { readonly type: 'bloom-level-up'; readonly level: number }
   | { readonly type: 'crop-unlocked'; readonly crop: CropId }
+  | { readonly type: 'cooked'; readonly recipe: RecipeId }
+  | { readonly type: 'fish-caught'; readonly fish: FishId }
+  | { readonly type: 'pet-cat'; readonly happiness: number }
+  | { readonly type: 'achievement-unlocked'; readonly achievement: string }
+  | { readonly type: 'journal-entry'; readonly entry: string }
   | { readonly type: 'moved'; readonly to: Cell }
   | { readonly type: 'rejected'; readonly reason: RejectReason };
 

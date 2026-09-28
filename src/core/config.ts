@@ -1,4 +1,4 @@
-import type { CropId, DecorationId, VisitorId } from './types';
+import type { CropId, DecorationId, FishId, RecipeId, VisitorId } from './types';
 
 /**
  * Game content and balance live here as plain data. Adding a crop, decoration or
@@ -125,12 +125,162 @@ export const VISITORS: readonly VisitorDef[] = [
   },
 ];
 
+export interface RecipeDef {
+  readonly id: RecipeId;
+  readonly name: string;
+  readonly ingredients: Readonly<Partial<Record<CropId, number>>>;
+  readonly sellPrice: number;
+  readonly bloomPoints: number;
+  readonly description: string;
+}
+
+export const RECIPES: Readonly<Record<RecipeId, RecipeDef>> = {
+  carrot_soup: {
+    id: 'carrot_soup',
+    name: 'Cozy Carrot Soup',
+    ingredients: { carrot: 2 },
+    sellPrice: 16,
+    bloomPoints: 3,
+    description: 'A warm, comforting bowl of simmered garden carrots.',
+  },
+  tomato_pasta: {
+    id: 'tomato_pasta',
+    name: 'Sun-dried Pasta',
+    ingredients: { tomato: 2, carrot: 1 },
+    sellPrice: 24,
+    bloomPoints: 4,
+    description: 'Rich tomato sauce over fresh hand-rolled pasta.',
+  },
+  berry_jam: {
+    id: 'berry_jam',
+    name: 'Sweet Berry Jam',
+    ingredients: { strawberry: 2 },
+    sellPrice: 30,
+    bloomPoints: 5,
+    description: 'A fragrant jar of sweet strawberry preserves.',
+  },
+  pumpkin_pie: {
+    id: 'pumpkin_pie',
+    name: 'Autumn Pumpkin Pie',
+    ingredients: { pumpkin: 1, strawberry: 1 },
+    sellPrice: 55,
+    bloomPoints: 8,
+    description: 'A spiced, golden pie baked with fresh garden pumpkin.',
+  },
+  salad: {
+    id: 'salad',
+    name: 'Garden Harvest Salad',
+    ingredients: { carrot: 1, tomato: 1, sunflower: 1 },
+    sellPrice: 40,
+    bloomPoints: 6,
+    description: 'A colorful tossed salad with sunflower seeds.',
+  },
+};
+
+export const RECIPE_IDS: readonly RecipeId[] = [
+  'carrot_soup',
+  'tomato_pasta',
+  'berry_jam',
+  'pumpkin_pie',
+  'salad',
+];
+
+export interface FishDef {
+  readonly id: FishId;
+  readonly name: string;
+  readonly rarity: number; // 0..1 chance weight
+  readonly sellPrice: number;
+  readonly bloomPoints: number;
+}
+
+export const FISH: Readonly<Record<FishId, FishDef>> = {
+  goldfish: { id: 'goldfish', name: 'Little Goldfish', rarity: 0.45, sellPrice: 8, bloomPoints: 1 },
+  perch: { id: 'perch', name: 'Pond Perch', rarity: 0.3, sellPrice: 15, bloomPoints: 2 },
+  koi: { id: 'koi', name: 'Calico Koi', rarity: 0.2, sellPrice: 28, bloomPoints: 4 },
+  sparklefish: {
+    id: 'sparklefish',
+    name: 'Moon Sparklefish',
+    rarity: 0.05,
+    sellPrice: 60,
+    bloomPoints: 8,
+  },
+};
+
+export const FISH_IDS: readonly FishId[] = ['goldfish', 'perch', 'koi', 'sparklefish'];
+
+export interface AchievementDef {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly icon: string;
+}
+
+export const ACHIEVEMENTS: readonly AchievementDef[] = [
+  {
+    id: 'first_harvest',
+    title: 'Green Thumb',
+    description: 'Harvest your first crop.',
+    icon: '🌱',
+  },
+  {
+    id: 'first_pumpkin',
+    title: 'Pumpkin Master',
+    description: 'Grow and harvest a giant pumpkin.',
+    icon: '🎃',
+  },
+  {
+    id: 'master_chef',
+    title: 'Cottage Chef',
+    description: 'Cook a delicious recipe at the cottage.',
+    icon: '🍲',
+  },
+  {
+    id: 'first_fish',
+    title: 'Patient Angler',
+    description: 'Catch a fish from the pond.',
+    icon: '🎣',
+  },
+  {
+    id: 'pet_cat',
+    title: 'Feline Friend',
+    description: 'Pet the island cat and hear it purr.',
+    icon: '🐱',
+  },
+  {
+    id: 'help_5_visitors',
+    title: 'Island Host',
+    description: 'Help 5 visitor requests.',
+    icon: '💌',
+  },
+  {
+    id: 'thriving_island',
+    title: 'Thriving Island',
+    description: 'Reach Bloom Level 5 (Flourishing or higher).',
+    icon: '🌸',
+  },
+  {
+    id: 'garden_expansion',
+    title: 'Expanding Horizons',
+    description: 'Expand your garden plot.',
+    icon: '🏡',
+  },
+];
+
+export const PLOT_EXPANSIONS = [
+  { targetHeight: 5, cost: 50, requiredBloom: 20 },
+  { targetHeight: 6, cost: 100, requiredBloom: 45 },
+  { targetHeight: 7, cost: 180, requiredBloom: 70 },
+] as const;
+
+export const SEASON_LENGTH = 10; // Days per season
+
 export const BALANCE = {
   startingCoins: 20,
   startingSeeds: { carrot: 6 } as Partial<Record<CropId, number>>,
   startingCrops: ['carrot'] as readonly CropId[],
   plotWidth: 6,
   plotHeight: 4,
+  maxPlotHeight: 7,
   rainChance: 0.2,
   visitorChance: 0.6,
   /** Visitors never arrive before this day, so the first morning is quiet. */

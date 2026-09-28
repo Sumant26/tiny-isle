@@ -66,6 +66,23 @@ const checks: [string, (s: Obj) => boolean][] = [
     (s) => Array.isArray(s.visitorsHelped) && s.visitorsHelped.every((v) => oneOf(v, VISITOR_IDS)),
   ],
   ['weather', (s) => oneOf(s.weather, ['clear', 'rain'] as const)],
+  [
+    'season',
+    (s) => s.season === undefined || oneOf(s.season, ['spring', 'summer', 'autumn'] as const),
+  ],
+  ['catHappiness', (s) => s.catHappiness === undefined || isInt(s.catHappiness)],
+  [
+    'achievements',
+    (s) =>
+      s.achievements === undefined ||
+      (Array.isArray(s.achievements) && s.achievements.every((a) => typeof a === 'string')),
+  ],
+  [
+    'journal',
+    (s) =>
+      s.journal === undefined ||
+      (Array.isArray(s.journal) && s.journal.every((j) => typeof j === 'string')),
+  ],
   ['rngSeed', (s) => isInt(s.rngSeed)],
   [
     'settings',

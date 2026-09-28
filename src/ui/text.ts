@@ -29,7 +29,9 @@ export const REJECT_MESSAGES: Record<RejectReason, string> = {
   locked: "You haven't unlocked that crop yet.",
   'not-enough-coins': 'Not enough coins for that.',
   'not-enough-produce': "You don't have enough of that.",
+  'not-enough-ingredients': 'Not enough ingredients to cook that.',
   'already-owned': 'You already have one of those.',
+  'max-size': 'Garden is already at maximum size.',
   'no-visitor': 'Nobody is visiting right now.',
   blocked: "You can't walk there.",
   'out-of-bounds': 'That spot is outside the garden.',
@@ -51,9 +53,19 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
       return { text: `Bought ${e.quantity} ${CROPS[e.crop].name} seeds`, tone: 'info' };
     case 'bought-decoration':
       return { text: `${DECORATIONS[e.decoration].name} placed on your island`, tone: 'good' };
+    case 'plot-expanded':
+      return { text: `Garden expanded! Now ${e.newHeight} rows.`, tone: 'good' };
+    case 'cooked':
+      return { text: `Cooked ${e.recipe.replace('_', ' ')}! 🍲`, tone: 'good' };
+    case 'fish-caught':
+      return { text: `Caught a ${e.fish}! 🎣`, tone: 'good' };
+    case 'pet-cat':
+      return { text: 'Purr... The cat feels loved! 🐱❤️', tone: 'good' };
+    case 'achievement-unlocked':
+      return { text: `🏆 Achievement: ${e.achievement}`, tone: 'good' };
     case 'day-started':
       return e.weather === 'rain'
-        ? { text: 'Soft rain today. Your garden is watered.', tone: 'info' }
+        ? { text: `Soft rain today. Welcome to Day ${e.day}!`, tone: 'info' }
         : null;
     case 'visitor-arrived':
       return { text: `${visitorDef(e.visitor).name} has come to visit!`, tone: 'info' };
@@ -72,6 +84,7 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
     case 'planted':
     case 'watered':
     case 'moved':
+    case 'journal-entry':
       return null;
   }
 };

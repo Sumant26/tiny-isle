@@ -44,24 +44,56 @@ export class PlayerView implements Mover {
     return { x: this.farmer.root.position.x, z: this.farmer.root.position.z };
   }
 
+  private idleTime = 0;
+
+  get isIdle(): boolean {
+    return !this.walking && this.idleTime > 3;
+  }
+
+  /** Plays a happy jump and heart reaction when cat is pet. */
+  async petCatReact(): Promise<void> {
+    const origY = this.cat.position.y;
+    await this.ctx.tweener.tween({
+      duration: 0.35,
+      ease: easings.outBack,
+      onUpdate: (k) => {
+        this.cat.position.y = origY + Math.sin(k * Math.PI) * 0.25;
+        this.cat.rotation.y += 0.2;
+      },
+    }).promise;
+    this.cat.position.y = origY;
+  }
+
   /** Per-frame idle bob and cat follow. Exposed for tests. */
   tick(dt: number): void {
     this.bobTime += dt;
+    if (!this.walking) this.idleTime += dt;
+    else this.idleTime = 0;
+
     const speed = this.walking ? 12 : 2.2;
     const amp = this.walking ? 0.06 : 0.03;
     this.farmer.root.position.y = GROUND_Y + Math.abs(Math.sin(this.bobTime * speed)) * amp;
 
-    // The cat trails behind at a comfortable distance.
+    // The cat trails behind at a comfortable distance or naps when idle.
     const p = this.farmer.root.position;
     const c = this.cat.position;
     const dx = p.x - c.x;
     const dz = p.z - c.z;
     const dist = Math.hypot(dx, dz);
-    if (dist > 0.9) {
-      const k = Math.min(1, dt * 3);
-      c.x += dx * k * ((dist - 0.9) / dist);
-      c.z += dz * k * ((dist - 0.9) / dist);
-      this.cat.rotation.y = facingAngle(dx, dz);
+
+    if (this.isIdle) {
+      // Cat naps: lowered position, slight breathing scale
+      this.cat.scaling.y = 1.0 + Math.sin(this.bobTime * 1.5) * 0.08;
+      this.cat.position.y = GROUND_Y - 0.04;
+    } else {
+      this.cat.scaling.y = 1.2;
+      this.cat.position.y = GROUND_Y;
+      if (dist > 0.9) {
+        const k = Math.min(1, dt * 3);
+        c.x += dx * k * ((dist - 0.9) / dist);
+        c.z += dz * k * ((dist - 0.9) / dist);
+        this.cat.rotation.y = facingAngle(dx, dz);
+      }
     }
   }
 

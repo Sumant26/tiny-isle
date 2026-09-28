@@ -40,3 +40,25 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-itchio:
+    name: Publish to itch.io
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Publish to itch.io (HTML5)
+        if: ${{ env.BUTLER_API_KEY != '' }}
+        uses: manleycode/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: html5
+          ITCH_GAME: tiny-isle
+          ITCH_USER: ${{ github.repository_owner }}
+          PACKAGE: dist

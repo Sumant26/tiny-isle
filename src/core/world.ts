@@ -25,6 +25,8 @@ export const LAYOUT = {
   gate: [
     { x: 6, z: 8 },
     { x: 7, z: 8 },
+    { x: 3, z: 3 },
+    { x: 4, z: 3 },
   ],
   cottage: { x: 3, z: 1, w: 2, d: 2 },
   pond: { x: 1, z: 9, w: 3, d: 3 },

@@ -66,35 +66,49 @@ const buildCottage = (
     flowerBoxFlowers.push(fl);
   }
 
-  // Porch Deck and Overhang
+  // Porch Deck, Steps and Overhang
   const porchDeck = shape(
-    CreateBox('porchDeck', { width: 2.3, depth: 0.8, height: 0.12 }, scene),
+    CreateBox('porchDeck', { width: 2.3, depth: 0.9, height: 0.08 }, scene),
     PALETTE.woodDark,
     { parent: node },
   );
-  porchDeck.position.set(0, 0.06, 1.35);
+  porchDeck.position.set(0, 0.04, 1.15);
 
-  for (const x of [-0.95, 0.95]) {
+  const porchStep = shape(
+    CreateBox('porchStep', { width: 1.2, depth: 0.3, height: 0.04 }, scene),
+    PALETTE.wood,
+    { parent: node },
+  );
+  porchStep.position.set(0.35, 0.02, 1.65);
+
+  // Welcome mat
+  shape(
+    CreateBox('welcomeMat', { width: 0.55, depth: 0.3, height: 0.02 }, scene),
+    PALETTE.woodLight,
+    { parent: node },
+  ).position.set(0.35, 0.05, 1.15);
+
+  for (const x of [-1.05, 1.05]) {
     const post = shape(
-      CreateCylinder('porchPost', { diameter: 0.08, height: 1.4 }, scene),
+      CreateCylinder('porchPost', { diameter: 0.07, height: 1.4 }, scene),
       PALETTE.bark,
       { parent: node },
     );
-    post.position.set(x, 0.7, 1.68);
+    post.position.set(x, 0.7, 1.55);
   }
 
   const porchRoof = shape(
-    CreateBox('porchRoof', { width: 2.45, depth: 0.9, height: 0.08 }, scene),
+    CreateBox('porchRoof', { width: 2.45, depth: 0.95, height: 0.08 }, scene),
     PALETTE.roof,
     { parent: node },
   );
-  porchRoof.position.set(0, 1.42, 1.35);
+  porchRoof.position.set(0, 1.42, 1.2);
   porchRoof.rotation.x = 0.15;
 
   // Porch Rocking Chair
   const rockingChair = new TransformNode('rockingChair', scene);
   rockingChair.parent = node;
-  rockingChair.position.set(-0.6, 0.12, 1.35);
+  rockingChair.position.set(-0.65, 0.08, 1.15);
 
   for (const x of [-0.14, 0.14]) {
     const runner = shape(
@@ -121,18 +135,18 @@ const buildCottage = (
 
   // Vintage Brass Gramophone on Porch Side Table
   const table = shape(
-    CreateCylinder('table', { diameter: 0.3, height: 0.3 }, scene),
+    CreateCylinder('table', { diameter: 0.28, height: 0.26 }, scene),
     PALETTE.woodDark,
     { parent: node },
   );
-  table.position.set(0.65, 0.21, 1.35);
+  table.position.set(0.85, 0.18, 1.15);
 
   const gramoBase = shape(
     CreateBox('gramoBase', { width: 0.18, depth: 0.18, height: 0.08 }, scene),
     PALETTE.wood,
     { parent: table },
   );
-  gramoBase.position.y = 0.18;
+  gramoBase.position.y = 0.16;
 
   const vinyl = shape(
     CreateCylinder('vinyl', { diameter: 0.16, height: 0.02, tessellation: 16 }, scene),
@@ -473,45 +487,67 @@ const buildPier = (ctx: SceneContext, root: TransformNode): void => {
   const { scene, shape } = ctx;
   const node = new TransformNode('pier', scene);
   node.parent = root;
-  node.position.set(-6.5, 0, 2.5);
+  node.position.set(-6.8, 0, -1.8);
+  node.rotation.y = -0.35;
 
   // Deck planks
   const deck = shape(
-    CreateBox('pierDeck', { width: 2.6, depth: 1.2, height: 0.12 }, scene),
+    CreateBox('pierDeck', { width: 2.8, depth: 1.1, height: 0.1 }, scene),
     PALETTE.woodDark,
     { parent: node },
   );
-  deck.position.y = 0.32;
+  deck.position.set(0, 0.32, 0);
+
+  // Cross plank accents
+  for (let i = -1.1; i <= 1.1; i += 0.45) {
+    shape(
+      CreateBox('pierPlank', { width: 0.04, depth: 1.12, height: 0.11 }, scene),
+      PALETTE.woodLight,
+      { parent: node, castShadow: false },
+    ).position.set(i, 0.32, 0);
+  }
 
   // Support Pilings into water
   for (const [x, z] of [
-    [-1.0, -0.45],
-    [1.0, -0.45],
-    [-1.0, 0.45],
-    [1.0, 0.45],
+    [-1.2, -0.45],
+    [1.2, -0.45],
+    [-1.2, 0.45],
+    [1.2, 0.45],
+    [0, -0.45],
+    [0, 0.45],
   ] as const) {
     const piling = shape(
-      CreateCylinder('pierPiling', { diameter: 0.14, height: 1.2 }, scene),
+      CreateCylinder('pierPiling', { diameter: 0.12, height: 1.4 }, scene),
       PALETTE.bark,
       { parent: node },
     );
-    piling.position.set(x, -0.2, z);
+    piling.position.set(x, -0.3, z);
   }
 
-  // Pier End Lantern Post
+  // Pier End Lantern Post & Bollard
   const post = shape(
-    CreateCylinder('pierPost', { diameter: 0.1, height: 0.9 }, scene),
+    CreateCylinder('pierPost', { diameter: 0.1, height: 1.1 }, scene),
     PALETTE.wood,
     { parent: node },
   );
-  post.position.set(-1.1, 0.7, 0.45);
+  post.position.set(-1.25, 0.8, 0.45);
 
   const lantern = shape(
-    CreateBox('pierLantern', { size: 0.2 }, scene),
+    CreateBox('pierLantern', { size: 0.22 }, scene),
     ctx.material(PALETTE.lampGlow, '#4A3F20'),
     { parent: post, castShadow: false },
   );
-  lantern.position.y = 0.45;
+  lantern.position.y = 0.55;
+
+  // Mooring bollards
+  for (const [bx, bz] of [
+    [1.2, 0.45],
+    [-1.2, -0.45],
+  ] as const) {
+    shape(CreateCylinder('bollard', { diameter: 0.12, height: 0.2 }, scene), PALETTE.woodLight, {
+      parent: node,
+    }).position.set(bx, 0.42, bz);
+  }
 };
 
 const buildOrchardIslet = (
@@ -521,28 +557,33 @@ const buildOrchardIslet = (
   const { scene, shape } = ctx;
   const isletRoot = new TransformNode('orchardIslet', scene);
   isletRoot.parent = root;
-  isletRoot.position.set(10.5, 0, -4.5);
+  isletRoot.position.set(11.0, 0, -6.5);
 
   // Arched wooden footbridge connecting main island to islet
   const bridge = new TransformNode('bridge', scene);
   bridge.parent = root;
-  bridge.position.set(7.5, 0, -4.5);
+  bridge.position.set(7.5, 0, -6.5);
 
   const bridgeDeck = shape(
-    CreateBox('bridgeDeck', { width: 3.2, depth: 0.9, height: 0.1 }, scene),
+    CreateBox('bridgeDeck', { width: 3.4, depth: 0.9, height: 0.1 }, scene),
     PALETTE.woodDark,
     { parent: bridge },
   );
-  bridgeDeck.position.y = 0.38;
-  bridgeDeck.rotation.z = -0.05;
+  bridgeDeck.position.y = 0.35;
 
   for (const z of [-0.4, 0.4]) {
     const rail = shape(
-      CreateBox('bridgeRail', { width: 3.2, depth: 0.06, height: 0.06 }, scene),
+      CreateBox('bridgeRail', { width: 3.4, depth: 0.06, height: 0.06 }, scene),
       PALETTE.woodLight,
       { parent: bridge },
     );
     rail.position.set(0, 0.65, z);
+
+    for (const rx of [-1.5, -0.75, 0, 0.75, 1.5]) {
+      shape(CreateCylinder('bridgePost', { diameter: 0.06, height: 0.35 }, scene), PALETTE.bark, {
+        parent: bridge,
+      }).position.set(rx, 0.5, z);
+    }
   }
 
   // Islet mound

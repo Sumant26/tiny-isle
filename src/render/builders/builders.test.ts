@@ -20,7 +20,9 @@ describe('buildEnvironment', () => {
     expect(env.lampLight.intensity).toBe(0);
     expect(env.ground.isPickable).toBe(true);
     // Fence posts and flowers are GPU instances of a few source meshes.
-    expect(ctx.scene.meshes.filter((m) => m.name.startsWith('post_')).length).toBeGreaterThan(20);
+    expect(
+      ctx.scene.meshes.filter((m) => m.name.startsWith('post_')).length,
+    ).toBeGreaterThanOrEqual(20);
     expect(ctx.scene.meshes.filter((m) => m.name === 'flower').length).toBe(40);
   });
 

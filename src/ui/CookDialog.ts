@@ -26,12 +26,12 @@ export class CookDialog {
       'nav',
       { class: 'cottage-tabs' },
       this.createTabBtn('kitchen', '🍳 Kitchen'),
-      this.createTabBtn('hearth', '🔥 Hearth'),
       this.createTabBtn('bed', '🛏️ Bed'),
-      this.createTabBtn('jukebox', '🎵 Jukebox'),
-      this.createTabBtn('books', '📚 Books'),
+      this.createTabBtn('hearth', '🔥 Fireplace'),
+      this.createTabBtn('tea', '🫖 Table & Tea'),
+      this.createTabBtn('books', '📚 Bookshelf'),
       this.createTabBtn('tidy', '🧹 Tidy'),
-      this.createTabBtn('tea', '🫖 Tea'),
+      this.createTabBtn('jukebox', '🎵 Jukebox'),
     );
 
     this.root = h(

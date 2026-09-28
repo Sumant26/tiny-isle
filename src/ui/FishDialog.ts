@@ -1,13 +1,20 @@
+import { FISH } from '../core/config';
+import type { FishId } from '../core/types';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
 import { h } from './dom';
 
+const SWEET_SPOT_MIN = 20;
+const SWEET_SPOT_MAX = 80;
+
 export class FishDialog {
   readonly root: HTMLElement;
   private readonly marker: HTMLElement;
+  private readonly sweetSpot: HTMLElement;
   private readonly actionBtn: HTMLElement;
+  private readonly statusMsg: HTMLElement;
   private animTimer: number | null = null;
-  private pos = 0;
+  private pos = 50;
   private dir = 1;
   private state: 'ready' | 'reeling' = 'ready';
 
@@ -15,13 +22,18 @@ export class FishDialog {
     private readonly store: Store,
     onClose: () => void,
   ) {
-    this.marker = h('div', { class: 'fishing-target' });
-    const bar = h('div', { class: 'fishing-bar' }, this.marker);
+    this.marker = h('div', { class: 'fishing-marker' }, '🐟');
+    this.sweetSpot = h('div', { class: 'fishing-sweet-spot' }, h('span', {}, '🎯 Catch Zone'));
+    const bar = h('div', { class: 'fishing-bar' }, this.sweetSpot, this.marker);
+    const barContainer = h('div', { class: 'fishing-bar-container' }, bar);
+
     this.actionBtn = h(
       'button',
       { class: 'primary-btn fish-action-btn', 'data-testid': 'fish-cast' },
       'Cast Line 🎣',
     );
+
+    this.statusMsg = h('p', { class: 'fishing-status' }, 'Tap Cast Line to start!');
 
     const closeBtn = h('button', { class: 'dialog-close', 'data-testid': 'fish-close' }, '✕');
     closeBtn.addEventListener('click', () => {
@@ -36,13 +48,15 @@ export class FishDialog {
       h(
         'p',
         { class: 'dialog-desc' },
-        'Watch the ripples and tap when the fish is in the sweet spot!',
+        'A relaxing pond mini-game. Cast your line and tap when the fish is in the green zone!',
       ),
-      bar,
+      barContainer,
       this.actionBtn,
+      this.statusMsg,
     );
 
     this.actionBtn.addEventListener('click', () => this.handleAction());
+    barContainer.addEventListener('click', () => this.handleAction());
 
     this.root.addEventListener('click', (e) => {
       if (e.target === this.root) {
@@ -50,41 +64,85 @@ export class FishDialog {
         onClose();
       }
     });
+
+    this.root.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        this.handleAction();
+      }
+    });
   }
 
   private handleAction(): void {
     if (this.state === 'ready') {
       this.state = 'reeling';
-      this.actionBtn.textContent = 'Catch! 🎯';
+      this.statusMsg.textContent = 'Wait for the fish to enter the green zone...';
+      this.actionBtn.textContent = 'Reel In! 🎣';
       this.startBarAnimation();
     } else {
       this.stop();
-      // Check if pos is inside target sweet spot (around 40% - 60%)
-      if (this.pos >= 35 && this.pos <= 65) {
+      const inZone = this.pos >= SWEET_SPOT_MIN && this.pos <= SWEET_SPOT_MAX;
+      if (inZone) {
+        const prevFish = { ...(this.store.getState().fishInventory ?? {}) };
         this.store.dispatch(actions.fish());
-        this.actionBtn.textContent = 'Fish Caught! 🎉';
+        const nextFish = this.store.getState().fishInventory ?? {};
+
+        // Find which fish was caught
+        let caughtName = 'a fish';
+        for (const [id, count] of Object.entries(nextFish) as [FishId, number][]) {
+          if (count > (prevFish[id] ?? 0)) {
+            caughtName = FISH[id].name;
+            break;
+          }
+        }
+
+        this.statusMsg.textContent = `🎉 Great catch! You reeled in a ${caughtName}!`;
+        this.actionBtn.textContent = 'Caught! 🌟';
       } else {
-        this.actionBtn.textContent = 'Missed! Try again 💦';
+        this.statusMsg.textContent = '💦 Missed! Give it another cast!';
+        this.actionBtn.textContent = 'Try Again 🎣';
       }
+
+      this.actionBtn.classList.remove('ready-to-catch');
+      this.sweetSpot.classList.remove('active');
+      this.marker.classList.remove('in-zone');
       this.state = 'ready';
+
       setTimeout(() => {
-        if (this.isOpen) this.actionBtn.textContent = 'Cast Line 🎣';
-      }, 1500);
+        if (this.isOpen && this.state === 'ready') {
+          this.actionBtn.textContent = 'Cast Line 🎣';
+        }
+      }, 1800);
     }
   }
 
   private startBarAnimation(): void {
-    this.pos = 0;
+    this.pos = 10;
     this.dir = 1;
     const animate = () => {
-      this.pos += this.dir * 2.5;
-      if (this.pos > 95) {
-        this.pos = 95;
+      // Gentle, calm speed
+      this.pos += this.dir * 0.9;
+      if (this.pos > 92) {
+        this.pos = 92;
         this.dir = -1;
-      } else if (this.pos < 0) {
-        this.pos = 0;
+      } else if (this.pos < 8) {
+        this.pos = 8;
         this.dir = 1;
       }
+
+      const inZone = this.pos >= SWEET_SPOT_MIN && this.pos <= SWEET_SPOT_MAX;
+      if (inZone) {
+        this.sweetSpot.classList.add('active');
+        this.marker.classList.add('in-zone');
+        this.actionBtn.classList.add('ready-to-catch');
+        this.actionBtn.textContent = 'CATCH NOW! 🎯';
+      } else {
+        this.sweetSpot.classList.remove('active');
+        this.marker.classList.remove('in-zone');
+        this.actionBtn.classList.remove('ready-to-catch');
+        this.actionBtn.textContent = 'Reel In! 🎣';
+      }
+
       this.marker.style.left = `${this.pos}%`;
       this.animTimer = requestAnimationFrame(animate);
     };
@@ -101,7 +159,12 @@ export class FishDialog {
   show(): void {
     this.state = 'ready';
     this.actionBtn.textContent = 'Cast Line 🎣';
+    this.actionBtn.classList.remove('ready-to-catch');
+    this.statusMsg.textContent = 'Tap Cast Line (or press Space) to start!';
+    this.pos = 50;
     this.marker.style.left = '50%';
+    this.sweetSpot.classList.remove('active');
+    this.marker.classList.remove('in-zone');
     const dlg = this.root as HTMLDialogElement;
     if (typeof dlg.showModal === 'function') dlg.showModal();
   }

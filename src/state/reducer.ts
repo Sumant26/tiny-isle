@@ -1,15 +1,26 @@
-import { checkAchievements } from '../core/rules/achievements';
+import { checkAchievements, unlockAchievement } from '../core/rules/achievements';
 import { petCat } from '../core/rules/cat';
 import { cook, eatFish, eatMeal } from '../core/rules/cooking';
 import { cottageActivity } from '../core/rules/cottage';
 import { sleep } from '../core/rules/day';
-import { buyDecoration, buySeeds, sell, sellAll, sellFish } from '../core/rules/economy';
+import {
+  buyDecoration,
+  buySeeds,
+  sell,
+  sellAll,
+  sellFish,
+  sellForage,
+  sellFruit,
+} from '../core/rules/economy';
 import { expandPlot } from '../core/rules/expansion';
 import { useTool } from '../core/rules/farming';
 import { fish } from '../core/rules/fishing';
+import { forageItem } from '../core/rules/foraging';
 import { chain, ok } from '../core/rules/outcome';
+import { adoptPet, petAnimal } from '../core/rules/pets';
 import { cycleSeed, moveTo, selectSeed, selectTool, updateSettings } from '../core/rules/player';
-import { fulfillVisitor } from '../core/rules/visitors';
+import { harvestOrchard, unlockIslet } from '../core/rules/progression';
+import { fulfillVisitor, giftVisitor } from '../core/rules/visitors';
 import type { GameState, Outcome } from '../core/types';
 import type { Action } from './actions';
 
@@ -33,6 +44,10 @@ export const reducer = (state: GameState, action: Action): Outcome => {
         return sell(state, action.crop, action.quantity);
       case 'market/sellFish':
         return sellFish(state, action.fish, action.quantity);
+      case 'market/sellForage':
+        return sellForage(state, action.item, action.quantity);
+      case 'market/sellFruit':
+        return sellFruit(state, action.fruit, action.quantity);
       case 'market/sellAll':
         return sellAll(state);
       case 'shop/buySeeds':
@@ -51,6 +66,26 @@ export const reducer = (state: GameState, action: Action): Outcome => {
         return fish(state);
       case 'pond/eatFish':
         return eatFish(state, action.fish);
+      case 'forage/collect':
+        return forageItem(state, action.nodeId);
+      case 'visitor/gift':
+        return giftVisitor(state, action.recipe);
+      case 'islet/unlock':
+        return unlockIslet(state);
+      case 'orchard/harvest':
+        return harvestOrchard(state);
+      case 'pet/adopt':
+        return adoptPet(state, action.pet);
+      case 'pet/interact':
+        return petAnimal(state, action.pet);
+      case 'music/setTrack':
+        return chain(
+          ok(
+            { ...state, activeMusicTrack: action.track },
+            { type: 'music-track-changed', track: action.track },
+          ),
+          (s) => (action.track !== 'off' ? unlockAchievement(s, 'jukebox_tunes') : ok(s)),
+        );
       case 'cat/pet':
         return petCat(state);
       case 'visitor/fulfill':

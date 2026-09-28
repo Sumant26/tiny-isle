@@ -1,6 +1,6 @@
 import { BALANCE, VISITORS, type VisitorDef } from '../config';
 import { nextRandom } from '../rng';
-import type { GameState, Outcome, VisitorId } from '../types';
+import type { CropId, GameState, Outcome, RecipeId, VisitorId } from '../types';
 import { addCount, chain, ok, reject } from './outcome';
 import { addBloom, unlockCrop } from './progression';
 
@@ -68,4 +68,57 @@ export const fulfillVisitor = (state: GameState): Outcome => {
     };
   }
   return chain(outcome, (s) => addBloom(s, BALANCE.visitorBloomPoints));
+};
+
+export const giftVisitor = (state: GameState, recipe: RecipeId | 'tea'): Outcome => {
+  if (!state.visitor) return reject(state, 'no-visitor');
+  const def = visitorDef(state.visitor.id);
+
+  if (recipe !== 'tea') {
+    const count = state.cookedInventory?.[recipe] ?? 0;
+    if (count <= 0) return reject(state, 'not-enough-ingredients');
+  }
+
+  const giftDesc =
+    recipe === 'tea'
+      ? 'freshly brewed island herbal tea'
+      : `warm homemade ${recipe.replace(/_/g, ' ')}`;
+  const journal = state.journal ?? [];
+  const entry = `Gifted ${def.name} ${giftDesc}. In return, ${def.name} shared heirloom seeds and cozy friendship.`;
+  const nextJournal = journal.includes(entry) ? journal : [...journal, entry];
+
+  // Gift rewards: 3 rare seeds (sunflower or pumpkin), 30 bonus coins, and 8 bloom points
+  const giftSeed: CropId = state.unlockedCrops.includes('sunflower') ? 'sunflower' : 'carrot';
+
+  const cooked =
+    recipe === 'tea'
+      ? state.cookedInventory
+      : {
+          ...state.cookedInventory,
+          [recipe]: (state.cookedInventory?.[recipe] ?? 1) - 1,
+        };
+
+  const next: GameState = {
+    ...state,
+    coins: state.coins + 30,
+    ...(cooked !== undefined ? { cookedInventory: cooked } : {}),
+    inventory: {
+      ...state.inventory,
+      seeds: addCount<CropId>(state.inventory.seeds, giftSeed, 3),
+    },
+    journal: nextJournal,
+  };
+
+  let outcome = ok(
+    next,
+    {
+      type: 'visitor-gifted',
+      visitor: def.id,
+      gift: `3 ${giftSeed} seeds and 30 gold coins`,
+    },
+    { type: 'journal-entry', entry },
+  );
+
+  outcome = chain(outcome, (s) => addBloom(s, 8));
+  return outcome;
 };

@@ -1,4 +1,4 @@
-import type { Weather } from '../core/types';
+import type { MusicTrackId, Weather } from '../core/types';
 import { type Note, RECIPES, type SoundName } from './sounds';
 
 export type TimeOfDay = 'day' | 'dusk' | 'night';
@@ -11,6 +11,7 @@ export interface SoundEngine {
   setMusicVolume(volume: number): void;
   setMuted(muted: boolean): void;
   setAmbience(weather: Weather, timeOfDay: TimeOfDay): void;
+  setMusicTrack(track: MusicTrackId): void;
   readonly ready: boolean;
   dispose(): void;
 }
@@ -37,6 +38,7 @@ export const createSoundEngine = ({
   let musicVol = musicVolume;
   let mute = muted;
 
+  let currentTrack: MusicTrackId = 'morning_breeze';
   let musicInterval: ReturnType<typeof setInterval> | null = null;
   let cricketInterval: ReturnType<typeof setInterval> | null = null;
   let rainSource: AudioBufferSourceNode | null = null;
@@ -94,24 +96,32 @@ export const createSoundEngine = ({
     osc.stop(end + 0.02);
   };
 
-  // Pentatonic scale frequencies for gentle procedural background music
-  const PENTATONIC = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99];
+  // Scales for tracks
+  const SCALES: Record<MusicTrackId, readonly number[]> = {
+    morning_breeze: [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99],
+    lofi_rain: [220.0, 261.63, 293.66, 311.13, 349.23, 392.0, 440.0, 523.25],
+    warm_hearth: [196.0, 246.94, 293.66, 329.63, 392.0, 493.88, 587.33],
+    off: [],
+  };
 
   const startGenerativeMusic = (): void => {
     if (musicInterval) return;
     let step = 0;
     musicInterval = setInterval(() => {
-      if (!ctx || !musicGain || mute || musicVol <= 0) return;
-      // Play a calm note every few beats
+      if (!ctx || !musicGain || mute || musicVol <= 0 || currentTrack === 'off') return;
       step++;
+      const scale = SCALES[currentTrack];
+      if (scale.length === 0) return;
+
       if (step % 2 === 0) {
-        const freq = PENTATONIC[Math.floor(Math.random() * PENTATONIC.length)] ?? 261.63;
-        const duration = 1.2 + Math.random() * 0.8;
+        const freq = scale[Math.floor(Math.random() * scale.length)] ?? 261.63;
+        const duration = currentTrack === 'lofi_rain' ? 1.6 : 1.2 + Math.random() * 0.8;
+        const type: OscillatorType = currentTrack === 'warm_hearth' ? 'triangle' : 'sine';
         playNote(ctx, musicGain, {
           freq,
           duration,
-          type: 'sine',
-          gain: 0.06,
+          type,
+          gain: currentTrack === 'lofi_rain' ? 0.045 : 0.06,
         });
       }
     }, 1400);
@@ -223,6 +233,9 @@ export const createSoundEngine = ({
       currentWeather = weather;
       currentTimeOfDay = timeOfDay;
       updateAmbienceAudio();
+    },
+    setMusicTrack: (t) => {
+      currentTrack = t;
     },
     dispose: () => {
       if (musicInterval) clearInterval(musicInterval);

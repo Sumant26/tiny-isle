@@ -68,9 +68,24 @@ const checks: [string, (s: Obj) => boolean][] = [
   ['weather', (s) => oneOf(s.weather, ['clear', 'rain'] as const)],
   [
     'season',
-    (s) => s.season === undefined || oneOf(s.season, ['spring', 'summer', 'autumn'] as const),
+    (s) =>
+      s.season === undefined || oneOf(s.season, ['spring', 'summer', 'autumn', 'winter'] as const),
   ],
   ['catHappiness', (s) => s.catHappiness === undefined || isInt(s.catHappiness)],
+  ['isletUnlocked', (s) => s.isletUnlocked === undefined || isBool(s.isletUnlocked)],
+  [
+    'activeMusicTrack',
+    (s) =>
+      s.activeMusicTrack === undefined ||
+      oneOf(s.activeMusicTrack, ['morning_breeze', 'lofi_rain', 'warm_hearth', 'off'] as const),
+  ],
+  [
+    'pets',
+    (s) =>
+      s.pets === undefined ||
+      (Array.isArray(s.pets) &&
+        s.pets.every((p) => oneOf(p, ['cat', 'puppy', 'bunny', 'duckling'] as const))),
+  ],
   [
     'achievements',
     (s) =>

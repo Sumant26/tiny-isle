@@ -621,10 +621,86 @@ dialog::backdrop {
 
 .hearth-flame,
 .bed-icon,
+.jukebox-icon,
 .book-icon,
 .tidy-icon,
 .tea-icon {
   font-size: 36px;
+}
+
+.jukebox-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: var(--cream-2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  gap: 10px;
+}
+
+.jukebox-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.jukebox-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.track-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.track-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--accent);
+}
+
+.track-card.active-track {
+  background: linear-gradient(135deg, #fff9db 0%, #ffeaa7 100%);
+  border-color: #f59f00;
+  box-shadow: 0 2px 8px rgba(245, 159, 0, 0.2);
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.track-icon {
+  font-size: 24px;
+}
+
+.track-text strong {
+  display: block;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.track-text small {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.track-btn.track-playing {
+  background: #f59f00;
+  border-color: #f59f00;
+  color: #fff;
 }
 
 .hearth-card.burning .hearth-flame {

@@ -8,7 +8,7 @@
   {
     "name": "Game code (entry chunk)",
     "path": "dist/assets/index-*.js",
-    "limit": "40 kB",
+    "limit": "50 kB",
     "gzip": true
   },
   {

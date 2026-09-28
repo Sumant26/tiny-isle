@@ -30,6 +30,9 @@ export const REJECT_MESSAGES: Record<RejectReason, string> = {
   'not-enough-coins': 'Not enough coins for that.',
   'not-enough-produce': "You don't have enough of that.",
   'not-enough-ingredients': 'Not enough ingredients to cook that.',
+  'not-enough-forage': "You don't have enough forage items.",
+  'not-enough-fruit': "You don't have enough fruit.",
+  'islet-locked': 'The orchard islet is not unlocked yet.',
   'already-owned': 'You already have one of those.',
   'max-size': 'Garden is already at maximum size.',
   'no-visitor': 'Nobody is visiting right now.',
@@ -65,6 +68,18 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
       return { text: `Caught a ${e.fish}! 🎣`, tone: 'good' };
     case 'fish-eaten':
       return { text: `Ate fresh ${e.fish}! 🐟 (+2 Bloom)`, tone: 'good' };
+    case 'foraged':
+      return { text: `Foraged ${e.item}! 🍄`, tone: 'good' };
+    case 'islet-unlocked':
+      return { text: '🌉 Restored the bridge to Orchard Islet!', tone: 'good' };
+    case 'orchard-harvested':
+      return { text: `Harvested ${e.count} fresh ${e.fruit}s! 🍎`, tone: 'good' };
+    case 'pet-adopted':
+      return { text: `Adopted a new island companion: ${e.pet}! 🐾`, tone: 'good' };
+    case 'pet-interacted':
+      return { text: '❤️ Your pet looks very happy!', tone: 'good' };
+    case 'visitor-gifted':
+      return { text: `Gifted visitor! Received ${e.gift} 🎁`, tone: 'good' };
     case 'cottage-activity':
       return { text: 'Cozy cottage moment! ✨', tone: 'good' };
     case 'pet-cat':
@@ -92,6 +107,7 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
     case 'planted':
     case 'watered':
     case 'moved':
+    case 'music-track-changed':
     case 'journal-entry':
       return null;
   }

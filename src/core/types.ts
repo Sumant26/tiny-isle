@@ -59,8 +59,21 @@ export type RecipeId =
   | 'salad'
   | 'tomato_pasta'
   | 'grilled_fish'
-  | 'fish_stew';
+  | 'fish_stew'
+  | 'berry_tart'
+  | 'mushroom_soup'
+  | 'apple_pie';
 export type FishId = 'koi' | 'goldfish' | 'perch' | 'sparklefish';
+export type ForageId = 'mushroom' | 'berry' | 'seashell' | 'wildflower';
+export type FruitId = 'apple' | 'cherry' | 'citrus';
+export type MusicTrackId = 'morning_breeze' | 'lofi_rain' | 'warm_hearth' | 'off';
+export type PetId = 'cat' | 'puppy' | 'bunny' | 'duckling';
+
+export interface ForageNode {
+  readonly id: string;
+  readonly type: ForageId;
+  readonly cell: Cell;
+}
 
 export interface Settings {
   readonly muted: boolean;
@@ -79,6 +92,8 @@ export interface Stats {
   readonly cooked?: number;
   readonly fishCaught?: number;
   readonly catPets?: number;
+  readonly foraged?: number;
+  readonly visitorGifts?: number;
 }
 
 export interface GameState {
@@ -92,6 +107,12 @@ export interface GameState {
   readonly inventory: Inventory;
   readonly cookedInventory?: Readonly<Partial<Record<RecipeId, number>>>;
   readonly fishInventory?: Readonly<Partial<Record<FishId, number>>>;
+  readonly forageInventory?: Readonly<Partial<Record<ForageId, number>>>;
+  readonly fruitInventory?: Readonly<Partial<Record<FruitId, number>>>;
+  readonly forageNodes?: readonly ForageNode[];
+  readonly isletUnlocked?: boolean;
+  readonly pets?: readonly PetId[];
+  readonly activeMusicTrack?: MusicTrackId;
   readonly unlockedCrops: readonly CropId[];
   readonly unlockedRecipes?: readonly RecipeId[];
   readonly decorations: readonly DecorationId[];
@@ -121,6 +142,9 @@ export type RejectReason =
   | 'not-enough-coins'
   | 'not-enough-produce'
   | 'not-enough-ingredients'
+  | 'not-enough-forage'
+  | 'not-enough-fruit'
+  | 'islet-locked'
   | 'already-owned'
   | 'max-size'
   | 'no-visitor'
@@ -156,12 +180,23 @@ export type GameEvent =
       readonly visitor: VisitorId;
       readonly unlocked: CropId | null;
     }
+  | {
+      readonly type: 'visitor-gifted';
+      readonly visitor: VisitorId;
+      readonly gift: string;
+    }
   | { readonly type: 'bloom-level-up'; readonly level: number }
   | { readonly type: 'crop-unlocked'; readonly crop: CropId }
   | { readonly type: 'cooked'; readonly recipe: RecipeId }
   | { readonly type: 'meal-eaten'; readonly recipe: RecipeId }
   | { readonly type: 'fish-caught'; readonly fish: FishId }
   | { readonly type: 'fish-eaten'; readonly fish: FishId }
+  | { readonly type: 'foraged'; readonly item: ForageId }
+  | { readonly type: 'islet-unlocked' }
+  | { readonly type: 'orchard-harvested'; readonly fruit: FruitId; readonly count: number }
+  | { readonly type: 'music-track-changed'; readonly track: MusicTrackId }
+  | { readonly type: 'pet-adopted'; readonly pet: PetId }
+  | { readonly type: 'pet-interacted'; readonly pet: PetId; readonly sound: string }
   | {
       readonly type: 'cottage-activity';
       readonly activity:

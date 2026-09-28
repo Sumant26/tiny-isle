@@ -4,6 +4,7 @@ import { makeState, seedWhereFirstRoll, unlockAll, withProduce } from '../../tes
 import {
   fulfillVisitor,
   GIFT_SEEDS,
+  giftVisitor,
   maybeVisitorArrives,
   nextEligibleVisitor,
   visitorDef,
@@ -95,5 +96,33 @@ describe('fulfillVisitor', () => {
     expect(fulfillVisitor(makeState()).events[0]).toMatchObject({ reason: 'no-visitor' });
     const s = makeState({ visitor: { id: 'hazel', arrivedOnDay: 2 } });
     expect(fulfillVisitor(s).events[0]).toMatchObject({ reason: 'not-enough-produce' });
+  });
+});
+
+describe('giftVisitor', () => {
+  it('gifts a meal or tea to the visitor and gives rare rewards', () => {
+    const s = makeState({
+      visitor: { id: 'hazel', arrivedOnDay: 2 },
+      cookedInventory: { carrot_soup: 1 },
+      coins: 10,
+    });
+    const r = giftVisitor(s, 'carrot_soup');
+    expect(r.state.coins).toBe(40);
+    expect(r.state.cookedInventory?.carrot_soup).toBe(0);
+    expect(r.events).toContainEqual(
+      expect.objectContaining({
+        type: 'visitor-gifted',
+        visitor: 'hazel',
+      }),
+    );
+  });
+
+  it('rejects gifting meal when none cooked in inventory', () => {
+    const s = makeState({
+      visitor: { id: 'hazel', arrivedOnDay: 2 },
+      cookedInventory: { carrot_soup: 0 },
+    });
+    const r = giftVisitor(s, 'carrot_soup');
+    expect(r.events).toContainEqual({ type: 'rejected', reason: 'not-enough-ingredients' });
   });
 });

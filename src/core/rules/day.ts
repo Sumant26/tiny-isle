@@ -2,6 +2,7 @@ import { BALANCE, SEASON_LENGTH } from '../config';
 import { isRipe, mapTiles } from '../plot';
 import { nextRandom } from '../rng';
 import type { GameState, Outcome, Season, Tile } from '../types';
+import { spawnForageNodes } from './foraging';
 import { chain, ok } from './outcome';
 import { maybeVisitorArrives } from './visitors';
 
@@ -29,11 +30,14 @@ export const sleep = (state: GameState): Outcome => {
   const plot = weather === 'rain' ? mapTiles(grown, rainWater) : grown;
   const day = state.day + 1;
   const season = getSeasonForDay(day);
-  return chain(
-    ok(
-      { ...state, plot, day, season, weather, rngSeed: roll.nextSeed },
-      { type: 'day-started', day, weather, season },
-    ),
-    maybeVisitorArrives,
-  );
+  const withForage = spawnForageNodes({
+    ...state,
+    plot,
+    day,
+    season,
+    weather,
+    rngSeed: roll.nextSeed,
+  });
+
+  return chain(ok(withForage, { type: 'day-started', day, weather, season }), maybeVisitorArrives);
 };

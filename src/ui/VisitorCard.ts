@@ -1,3 +1,4 @@
+import type { RecipeId } from '../core/types';
 import { actions } from '../state/actions';
 import { selectVisitorInfo, type VisitorInfo } from '../state/selectors';
 import { shallowEqual, type Store } from '../state/store';
@@ -21,12 +22,35 @@ export const createVisitorCard = (store: Store): VisitorCard => {
     },
     'Give',
   );
+  const giftBtn = h(
+    'button',
+    {
+      class: 'btn btn-secondary',
+      'data-testid': 'visitor-gift',
+      title: 'Gift cooked meal or herbal tea for rare seeds',
+      onclick: () => {
+        const s = store.getState();
+        const cookedEntries = Object.entries(s.cookedInventory ?? {}).filter(
+          ([_, qty]) => typeof qty === 'number' && qty > 0,
+        );
+        if (cookedEntries.length > 0) {
+          const first = cookedEntries[0];
+          if (first) {
+            store.dispatch(actions.giftVisitor(first[0] as RecipeId));
+            return;
+          }
+        }
+        store.dispatch(actions.giftVisitor('tea'));
+      },
+    },
+    'Gift 🎁',
+  );
   const el = h(
     'aside',
     { class: 'visitor-card', 'aria-live': 'polite', 'data-testid': 'visitor-card', hidden: true },
     name,
     text,
-    h('div', { class: 'row-actions' }, progress, give),
+    h('div', { class: 'row-actions' }, progress, give, giftBtn),
   );
 
   const render = (info: VisitorInfo | null): void => {

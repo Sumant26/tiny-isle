@@ -17,7 +17,12 @@ export type SoundName =
   | 'fish_bite'
   | 'fish_catch'
   | 'achievement'
-  | 'expand';
+  | 'expand'
+  | 'forage'
+  | 'gift'
+  | 'needle'
+  | 'bark'
+  | 'quack';
 
 export interface Note {
   /** Hz */
@@ -101,6 +106,28 @@ export const RECIPES: Readonly<Record<SoundName, readonly Note[]>> = {
     { freq: 392, duration: 0.3, delay: 0.3, type: 'sine', gain: 0.25 },
     { freq: 523, duration: 0.5, delay: 0.45, type: 'sine', gain: 0.25 },
   ],
+  forage: [
+    { freq: 659, duration: 0.08, type: 'sine', gain: 0.22 },
+    { freq: 988, duration: 0.14, delay: 0.06, type: 'sine', gain: 0.25 },
+  ],
+  gift: [
+    { freq: 440, duration: 0.12, type: 'triangle', gain: 0.2 },
+    { freq: 554, duration: 0.12, delay: 0.08, type: 'triangle', gain: 0.2 },
+    { freq: 659, duration: 0.15, delay: 0.16, type: 'sine', gain: 0.22 },
+    { freq: 880, duration: 0.3, delay: 0.24, type: 'sine', gain: 0.25 },
+  ],
+  needle: [
+    { freq: 800, duration: 0.04, noise: true, gain: 0.1 },
+    { freq: 300, duration: 0.05, delay: 0.03, type: 'sine', gain: 0.08 },
+  ],
+  bark: [
+    { freq: 350, duration: 0.07, type: 'triangle', gain: 0.22, slideTo: 220 },
+    { freq: 380, duration: 0.09, delay: 0.08, type: 'triangle', gain: 0.22, slideTo: 240 },
+  ],
+  quack: [
+    { freq: 420, duration: 0.1, type: 'sawtooth', gain: 0.14, slideTo: 320 },
+    { freq: 400, duration: 0.12, delay: 0.1, type: 'sawtooth', gain: 0.12, slideTo: 300 },
+  ],
 };
 
 export const soundForEvent = (event: GameEvent): SoundName | null => {
@@ -112,14 +139,17 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
     case 'watered':
       return 'water';
     case 'harvested':
+    case 'orchard-harvested':
       return 'harvest';
     case 'sold':
     case 'visitor-helped':
       return 'coin';
     case 'bought-seeds':
     case 'bought-decoration':
+    case 'pet-adopted':
       return 'buy';
     case 'plot-expanded':
+    case 'islet-unlocked':
       return 'expand';
     case 'cooked':
     case 'cottage-activity':
@@ -130,6 +160,14 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
       return 'fish_catch';
     case 'pet-cat':
       return 'purr';
+    case 'pet-interacted':
+      return event.pet === 'puppy' ? 'bark' : event.pet === 'duckling' ? 'quack' : 'purr';
+    case 'foraged':
+      return 'forage';
+    case 'visitor-gifted':
+      return 'gift';
+    case 'music-track-changed':
+      return 'needle';
     case 'achievement-unlocked':
       return 'achievement';
     case 'rejected':

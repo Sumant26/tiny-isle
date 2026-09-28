@@ -186,7 +186,17 @@ export const createGame = ({
   const camera = ctx.scene.activeCamera as IslandCamera | null;
 
   const detachPicker = attachPicker(ctx.scene, {
-    onTap: (cell) => void controller.clickCell(cell),
+    onTap: (cell) => {
+      const s = store.getState();
+      const forageNode = (s.forageNodes ?? []).find(
+        (n) => n.cell.x === cell.x && n.cell.z === cell.z,
+      );
+      if (forageNode) {
+        store.dispatch(actions.collectForage(forageNode.id));
+        return;
+      }
+      void controller.clickCell(cell);
+    },
     onHover: (cell) => {
       if (!cell) {
         renderer.plot.setHoveredTile(null);
@@ -254,11 +264,29 @@ export const createGame = ({
     { fireImmediately: true },
   );
 
+  const offTrack = store.select(
+    (s) => s.activeMusicTrack ?? 'morning_breeze',
+    (t) => sound.setMusicTrack(t),
+    { fireImmediately: true },
+  );
+
   const offSound = store.onEvent((e) => {
     const name = soundForEvent(e);
     if (name) sound.play(name);
     if (e.type === 'fish-caught') {
       void renderer.player.catchFishReact();
+    }
+    if (e.type === 'visitor-gifted') {
+      ui.toasts.show(`🎁 Received a wonderful gift: ${e.gift}!`, 'good');
+    }
+    if (e.type === 'foraged') {
+      ui.toasts.show(`🧺 Foraged wild ${e.item}!`, 'good');
+    }
+    if (e.type === 'islet-unlocked') {
+      ui.toasts.show('🌉 Footbridge restored! Orchard Islet unlocked! 🍎', 'good');
+    }
+    if (e.type === 'pet-adopted') {
+      ui.toasts.show(`🐾 Welcomed your new pet ${e.pet} to the island! ❤️`, 'good');
     }
   });
 
@@ -313,6 +341,7 @@ export const createGame = ({
       offSave();
       offSettings();
       offWeather();
+      offTrack();
       offSound();
       detachPicker();
       uiRoot.ownerDocument.removeEventListener('pointerdown', unlockAudio);

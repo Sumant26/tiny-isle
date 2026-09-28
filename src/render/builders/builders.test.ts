@@ -26,7 +26,7 @@ describe('buildEnvironment', () => {
 
   it('works with the default random source', () => {
     const ctx = createTestContext();
-    expect(buildEnvironment(ctx).swaying).toHaveLength(1);
+    expect(buildEnvironment(ctx).swaying).toHaveLength(4);
   });
 });
 

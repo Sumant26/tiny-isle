@@ -1,4 +1,14 @@
-import type { CropId, DecorationId, FishId, RecipeId, VisitorId } from './types';
+import type {
+  CropId,
+  DecorationId,
+  FishId,
+  ForageId,
+  FruitId,
+  MusicTrackId,
+  PetId,
+  RecipeId,
+  VisitorId,
+} from './types';
 
 /**
  * Game content and balance live here as plain data. Adding a crop, decoration or
@@ -66,6 +76,155 @@ export const CROPS: Readonly<Record<CropId, CropDef>> = {
 };
 
 export const CROP_IDS = Object.keys(CROPS) as CropId[];
+
+export interface ForageDef {
+  readonly id: ForageId;
+  readonly name: string;
+  readonly icon: string;
+  readonly sellPrice: number;
+  readonly bloomPoints: number;
+  readonly description: string;
+}
+
+export const FORAGE: Readonly<Record<ForageId, ForageDef>> = {
+  mushroom: {
+    id: 'mushroom',
+    name: 'Forest Chanterelle',
+    icon: '🍄',
+    sellPrice: 8,
+    bloomPoints: 1,
+    description: 'Golden wild mushrooms gathered from mossy roots.',
+  },
+  berry: {
+    id: 'berry',
+    name: 'Wild Brambleberry',
+    icon: '🫐',
+    sellPrice: 10,
+    bloomPoints: 2,
+    description: 'Sweet and tangy wild berries bursting with juice.',
+  },
+  seashell: {
+    id: 'seashell',
+    name: 'Iridescent Conch',
+    icon: '🐚',
+    sellPrice: 12,
+    bloomPoints: 2,
+    description: 'A polished pearl shell washed ashore on the coastline.',
+  },
+  wildflower: {
+    id: 'wildflower',
+    name: 'Island Bellflower',
+    icon: '🌸',
+    sellPrice: 7,
+    bloomPoints: 1,
+    description: 'Delicate wildflower petals with sweet aroma.',
+  },
+};
+
+export const FORAGE_IDS: readonly ForageId[] = ['mushroom', 'berry', 'seashell', 'wildflower'];
+
+export interface FruitDef {
+  readonly id: FruitId;
+  readonly name: string;
+  readonly icon: string;
+  readonly sellPrice: number;
+  readonly bloomPoints: number;
+}
+
+export const FRUITS: Readonly<Record<FruitId, FruitDef>> = {
+  apple: { id: 'apple', name: 'Crisp Red Apple', icon: '🍎', sellPrice: 14, bloomPoints: 2 },
+  cherry: { id: 'cherry', name: 'Sweet Cherry', icon: '🍒', sellPrice: 18, bloomPoints: 3 },
+  citrus: { id: 'citrus', name: 'Golden Lemon', icon: '🍋', sellPrice: 16, bloomPoints: 3 },
+};
+
+export const FRUIT_IDS: readonly FruitId[] = ['apple', 'cherry', 'citrus'];
+
+export interface PetDef {
+  readonly id: PetId;
+  readonly name: string;
+  readonly icon: string;
+  readonly description: string;
+  readonly cost: number;
+  readonly sound: string;
+}
+
+export const PETS: Readonly<Record<PetId, PetDef>> = {
+  cat: {
+    id: 'cat',
+    name: 'Island Calico Cat',
+    icon: '🐱',
+    description: 'Loves sunbeams, porch naps, and fish treats.',
+    cost: 0,
+    sound: 'Purrr... Meow! ❤️',
+  },
+  puppy: {
+    id: 'puppy',
+    name: 'Shiba Puppy',
+    icon: '🐶',
+    description: 'Playful pup that loves following you around the farm.',
+    cost: 40,
+    sound: 'Woof woof! 🐾❤️',
+  },
+  bunny: {
+    id: 'bunny',
+    name: 'Fluffy White Bunny',
+    icon: '🐰',
+    description: 'Gentle hopper that nibbles carrots in flowerbeds.',
+    cost: 35,
+    sound: 'Twitch twitch! 🥕❤️',
+  },
+  duckling: {
+    id: 'duckling',
+    name: 'Pond Duckling',
+    icon: '🦆',
+    description: 'Splashes happily near the pier and pond.',
+    cost: 30,
+    sound: 'Quack quack! 🌊❤️',
+  },
+};
+
+export const PET_IDS: readonly PetId[] = ['cat', 'puppy', 'bunny', 'duckling'];
+
+export interface MusicTrackDef {
+  readonly id: MusicTrackId;
+  readonly title: string;
+  readonly icon: string;
+  readonly description: string;
+}
+
+export const MUSIC_TRACKS: Readonly<Record<MusicTrackId, MusicTrackDef>> = {
+  morning_breeze: {
+    id: 'morning_breeze',
+    title: 'Morning Breeze',
+    icon: '☀️',
+    description: 'Bright, airy melodic acoustic pentatonic tones.',
+  },
+  lofi_rain: {
+    id: 'lofi_rain',
+    title: 'Lofi Rain',
+    icon: '🌧️',
+    description: 'Cozy jazz chords, soft tape texture, and mellow notes.',
+  },
+  warm_hearth: {
+    id: 'warm_hearth',
+    title: 'Warm Hearth Piano',
+    icon: '🔥',
+    description: 'Resonant, comforting cottage fireplace piano melody.',
+  },
+  off: {
+    id: 'off',
+    title: 'Mute Gramophone',
+    icon: '⏹️',
+    description: 'Natural island ambience only.',
+  },
+};
+
+export const MUSIC_TRACK_IDS: readonly MusicTrackId[] = [
+  'morning_breeze',
+  'lofi_rain',
+  'warm_hearth',
+  'off',
+];
 
 export interface DecorationDef {
   readonly id: DecorationId;
@@ -159,6 +318,30 @@ export const RECIPES: Readonly<Record<RecipeId, RecipeDef>> = {
     bloomPoints: 5,
     description: 'A fragrant jar of sweet strawberry preserves.',
   },
+  berry_tart: {
+    id: 'berry_tart',
+    name: 'Rustic Berry Tart',
+    ingredients: { strawberry: 1, pumpkin: 1 },
+    sellPrice: 48,
+    bloomPoints: 7,
+    description: 'A crisp, flaky pastry bursting with glazed sweet berries.',
+  },
+  mushroom_soup: {
+    id: 'mushroom_soup',
+    name: 'Woodland Mushroom Bisque',
+    ingredients: { carrot: 1, tomato: 1 },
+    sellPrice: 42,
+    bloomPoints: 6,
+    description: 'Creamy, rich forest bisque simmered to perfection.',
+  },
+  apple_pie: {
+    id: 'apple_pie',
+    name: 'Cinnamon Orchard Pie',
+    ingredients: { pumpkin: 1, carrot: 1 },
+    sellPrice: 60,
+    bloomPoints: 8,
+    description: 'Warm spiced orchard dessert fresh from the oven.',
+  },
   pumpkin_pie: {
     id: 'pumpkin_pie',
     name: 'Autumn Pumpkin Pie',
@@ -197,6 +380,9 @@ export const RECIPE_IDS: readonly RecipeId[] = [
   'carrot_soup',
   'tomato_pasta',
   'berry_jam',
+  'berry_tart',
+  'mushroom_soup',
+  'apple_pie',
   'grilled_fish',
   'salad',
   'pumpkin_pie',
@@ -265,6 +451,30 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     icon: '🐱',
   },
   {
+    id: 'forager_master',
+    title: 'Shoreline Forager',
+    description: 'Forage wild mushrooms, berries, or seashells along the shoreline.',
+    icon: '🍄',
+  },
+  {
+    id: 'gift_visitor',
+    title: 'Generous Host',
+    description: 'Gift a delicious cooked meal or hot tea to a visitor.',
+    icon: '🎁',
+  },
+  {
+    id: 'orchard_expansion',
+    title: 'Orchard Haven',
+    description: 'Unlock the wooden bridge and miniature fruit islet.',
+    icon: '🍎',
+  },
+  {
+    id: 'jukebox_tunes',
+    title: 'Vinyl Nostalgia',
+    description: 'Select cozy melodies on the vintage cottage gramophone.',
+    icon: '🎵',
+  },
+  {
     id: 'help_5_visitors',
     title: 'Island Host',
     description: 'Help 5 visitor requests.',
@@ -283,6 +493,11 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     icon: '🏡',
   },
 ];
+
+export const ISLET_EXPANSION = {
+  cost: 60,
+  requiredBloom: 25,
+} as const;
 
 export const PLOT_EXPANSIONS = [
   { targetHeight: 5, cost: 50, requiredBloom: 20 },

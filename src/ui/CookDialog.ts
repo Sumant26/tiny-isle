@@ -1,10 +1,10 @@
-import { FISH_IDS, RECIPE_IDS, RECIPES } from '../core/config';
+import { FISH_IDS, MUSIC_TRACKS, MUSIC_TRACK_IDS, RECIPE_IDS, RECIPES } from '../core/config';
 import type { CropId } from '../core/types';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
 import { h } from './dom';
 
-type CottageTab = 'kitchen' | 'hearth' | 'bed' | 'books' | 'tidy' | 'tea';
+type CottageTab = 'kitchen' | 'hearth' | 'bed' | 'jukebox' | 'books' | 'tidy' | 'tea';
 
 export class CookDialog {
   readonly root: HTMLElement;
@@ -26,8 +26,9 @@ export class CookDialog {
       'nav',
       { class: 'cottage-tabs' },
       this.createTabBtn('kitchen', '🍳 Kitchen'),
-      this.createTabBtn('hearth', '🔥 Fireplace'),
+      this.createTabBtn('hearth', '🔥 Hearth'),
       this.createTabBtn('bed', '🛏️ Bed'),
+      this.createTabBtn('jukebox', '🎵 Jukebox'),
       this.createTabBtn('books', '📚 Books'),
       this.createTabBtn('tidy', '🧹 Tidy'),
       this.createTabBtn('tea', '🫖 Tea'),
@@ -75,6 +76,9 @@ export class CookDialog {
         break;
       case 'bed':
         this.renderBed();
+        break;
+      case 'jukebox':
+        this.renderJukebox();
         break;
       case 'books':
         this.renderBooks();
@@ -317,6 +321,71 @@ export class CookDialog {
         { class: 'cottage-view' },
         h('p', { class: 'dialog-desc' }, 'Take a restful nap or sleep through the cozy night.'),
         bedCard,
+      ),
+    );
+  }
+
+  private renderJukebox(): void {
+    const s = this.store.getState();
+    const active = s.activeMusicTrack ?? 'morning_breeze';
+
+    const tracksList = h('div', { class: 'jukebox-tracks' });
+    MUSIC_TRACK_IDS.forEach((id) => {
+      const def = MUSIC_TRACKS[id];
+      const isCurrent = active === id;
+
+      const trackBtn = h(
+        'button',
+        {
+          class: `primary-btn track-btn ${isCurrent ? 'track-playing' : ''}`,
+          'data-testid': `track-${id}`,
+        },
+        isCurrent ? '▶ Playing' : 'Select',
+      );
+
+      trackBtn.addEventListener('click', () => {
+        this.store.dispatch(actions.setMusicTrack(id));
+        this.renderCurrentTab();
+      });
+
+      const trackCard = h(
+        'div',
+        { class: `track-card ${isCurrent ? 'active-track' : ''}` },
+        h(
+          'div',
+          { class: 'track-info' },
+          h('span', { class: 'track-icon' }, def.icon),
+          h(
+            'div',
+            { class: 'track-text' },
+            h('strong', {}, def.title),
+            h('small', {}, def.description),
+          ),
+        ),
+        trackBtn,
+      );
+      tracksList.appendChild(trackCard);
+    });
+
+    const jukeboxCard = h(
+      'div',
+      { class: 'jukebox-card' },
+      h(
+        'div',
+        { class: 'jukebox-header' },
+        h('span', { class: 'jukebox-icon' }, '🎵'),
+        h('h3', {}, 'Vintage Cottage Gramophone'),
+      ),
+      h('p', {}, 'Select relaxing procedural melodies to soundtrack your peaceful island days.'),
+      tracksList,
+    );
+
+    this.bodyEl.appendChild(
+      h(
+        'div',
+        { class: 'cottage-view' },
+        h('p', { class: 'dialog-desc' }, 'Cottage vinyl soundscapes & cozy ambiance.'),
+        jukeboxCard,
       ),
     );
   }

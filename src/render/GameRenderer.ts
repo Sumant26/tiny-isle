@@ -11,7 +11,7 @@ import type { SceneContext } from './SceneContext';
 import { AmbientView } from './views/AmbientView';
 import { PlayerView } from './views/PlayerView';
 import { PlotView } from './views/PlotView';
-import { DecorationView, VisitorView } from './views/SceneryViews';
+import { DecorationView, ForageView, PetsView, VisitorView } from './views/SceneryViews';
 
 export interface GameRenderer {
   readonly player: PlayerView;
@@ -20,6 +20,8 @@ export interface GameRenderer {
   readonly ambient: AmbientView;
   readonly decorations: DecorationView;
   readonly visitor: VisitorView;
+  readonly forage: ForageView;
+  readonly pets: PetsView;
   readonly effects: Effects;
   onCellPicked(handler: (cell: Cell) => void): void;
   setTimeOfDay(time: TimeOfDay, animate?: boolean): Promise<void>;
@@ -43,6 +45,8 @@ export const createGameRenderer = (
   const player = new PlayerView(ctx, selectPlayer(store.getState()));
   const decorations = new DecorationView(ctx, store);
   const visitor = new VisitorView(ctx, store);
+  const forage = new ForageView(ctx, store);
+  const pets = new PetsView(ctx, store);
   const ambient = new AmbientView(
     ctx,
     store,
@@ -50,6 +54,8 @@ export const createGameRenderer = (
       yield* plot.swaying;
       yield* env.swaying;
     },
+    env.rockingChair,
+    env.flowerBoxFlowers,
     random,
   );
   const lighting = new LightingController(ctx, env.lampLight, env.lamp, env.cottageWindow, (t) =>
@@ -75,6 +81,8 @@ export const createGameRenderer = (
     ambient,
     decorations,
     visitor,
+    forage,
+    pets,
     effects,
     onCellPicked: (h) => {
       pickHandler = h;
@@ -90,6 +98,8 @@ export const createGameRenderer = (
       ambient.dispose();
       visitor.dispose();
       decorations.dispose();
+      forage.dispose();
+      pets.dispose();
       player.dispose();
       plot.dispose();
     },

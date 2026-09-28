@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeState } from '../../test/fixtures';
-import { addBloom, unlockCrop } from './progression';
+import { addBloom, harvestOrchard, unlockCrop, unlockIslet } from './progression';
 
 describe('unlockCrop', () => {
   it('unlocks once', () => {
@@ -33,5 +33,32 @@ describe('addBloom', () => {
 
   it('adds points without events below the next threshold', () => {
     expect(addBloom(makeState(), 3).events).toEqual([]);
+  });
+});
+
+describe('unlockIslet & harvestOrchard', () => {
+  it('unlocks the second islet when bloom and coins are sufficient', () => {
+    const s = makeState({ bloom: 30, coins: 100, isletUnlocked: false });
+    const r = unlockIslet(s);
+    expect(r.state.isletUnlocked).toBe(true);
+    expect(r.events).toContainEqual({ type: 'islet-unlocked' });
+  });
+
+  it('rejects unlocking when bloom is low or already unlocked', () => {
+    const s = makeState({ bloom: 5, coins: 100, isletUnlocked: false });
+    expect(unlockIslet(s).events).toContainEqual({ type: 'rejected', reason: 'locked' });
+    const unlocked = makeState({ bloom: 50, coins: 100, isletUnlocked: true });
+    expect(unlockIslet(unlocked).events).toContainEqual({
+      type: 'rejected',
+      reason: 'already-owned',
+    });
+  });
+
+  it('harvests fruits from the orchard once unlocked', () => {
+    const s = makeState({ isletUnlocked: true });
+    const r = harvestOrchard(s);
+    expect(r.state.fruitInventory?.apple).toBe(2);
+    expect(r.state.fruitInventory?.cherry).toBe(2);
+    expect(r.state.fruitInventory?.citrus).toBe(2);
   });
 });

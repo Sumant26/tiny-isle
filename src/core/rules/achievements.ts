@@ -49,6 +49,21 @@ export const checkAchievements = (state: GameState): Outcome => {
     newlyUnlocked.push('garden_expansion');
   }
 
+  // forager_master
+  if (!current.has('forager_master') && (state.stats.foraged ?? 0) >= 1) {
+    newlyUnlocked.push('forager_master');
+  }
+
+  // gift_visitor
+  if (!current.has('gift_visitor') && (state.stats.visitorGifts ?? 0) >= 1) {
+    newlyUnlocked.push('gift_visitor');
+  }
+
+  // orchard_expansion
+  if (!current.has('orchard_expansion') && state.isletUnlocked) {
+    newlyUnlocked.push('orchard_expansion');
+  }
+
   if (newlyUnlocked.length === 0) {
     return { state, events: [] };
   }
@@ -65,5 +80,18 @@ export const checkAchievements = (state: GameState): Outcome => {
       achievements: nextAchievements,
     },
     events,
+  };
+};
+
+export const unlockAchievement = (state: GameState, achievementId: string): Outcome => {
+  const current = new Set(state.achievements ?? []);
+  if (current.has(achievementId)) return { state, events: [] };
+  const def = ACHIEVEMENTS.find((a) => a.id === achievementId);
+  return {
+    state: {
+      ...state,
+      achievements: [...(state.achievements ?? []), achievementId],
+    },
+    events: [{ type: 'achievement-unlocked', achievement: def?.title ?? achievementId }],
   };
 };

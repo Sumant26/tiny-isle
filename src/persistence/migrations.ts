@@ -1,7 +1,7 @@
 import type { Result } from './schema';
 
 /** Bump when the saved state shape changes, and add a migration from the previous version. */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type Migration = (state: Record<string, unknown>) => Record<string, unknown>;
 
@@ -33,6 +33,20 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       cooked: 0,
       fishCaught: 0,
       catPets: 0,
+    },
+  }),
+  2: (s) => ({
+    ...s,
+    forageInventory: { mushroom: 0, berry: 0, seashell: 0, wildflower: 0 },
+    fruitInventory: { apple: 0, cherry: 0, citrus: 0 },
+    isletUnlocked: false,
+    pets: ['cat'],
+    activeMusicTrack: 'morning_breeze',
+    stats: {
+      ...(typeof s.stats === 'object' && s.stats !== null
+        ? s.stats
+        : { harvested: 0, earned: 0, cooked: 0, fishCaught: 0, catPets: 0 }),
+      foraged: 0,
     },
   }),
 };

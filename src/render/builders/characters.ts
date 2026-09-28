@@ -1,5 +1,5 @@
 import type { VisitorId } from '../../core/types';
-import { CreateCapsule, CreateCylinder, CreateSphere, TransformNode } from '../babylon';
+import { CreateBox, CreateCapsule, CreateCylinder, CreateSphere, TransformNode } from '../babylon';
 import { PALETTE } from '../palette';
 import type { SceneContext } from '../SceneContext';
 
@@ -120,6 +120,157 @@ const buildProceduralCat = (ctx: SceneContext): TransformNode => {
   tail.rotation.x = -0.6;
   root.scaling.setAll(1.2);
   return root;
+};
+
+export const buildPuppy = (ctx: SceneContext): TransformNode =>
+  ctx.model('pet/puppy', () => buildProceduralPuppy(ctx));
+
+const buildProceduralPuppy = (ctx: SceneContext): TransformNode => {
+  const { scene, shape } = ctx;
+  const root = new TransformNode('puppy', scene);
+  const o = { parent: root };
+  shape(
+    CreateSphere(
+      'pupBody',
+      { diameterX: 0.34, diameterY: 0.3, diameterZ: 0.5, segments: 12 },
+      scene,
+    ),
+    '#E08738',
+    o,
+  ).position.y = 0.22;
+  shape(CreateSphere('pupHead', { diameter: 0.3, segments: 12 }, scene), '#E08738', o).position.set(
+    0,
+    0.42,
+    0.24,
+  );
+  shape(
+    CreateSphere('pupSnout', { diameterX: 0.16, diameterY: 0.13, diameterZ: 0.18 }, scene),
+    '#FFF5EA',
+    o,
+  ).position.set(0, 0.38, 0.38);
+  shape(CreateSphere('pupNose', { diameter: 0.06 }, scene), PALETTE.eye, o).position.set(
+    0,
+    0.41,
+    0.46,
+  );
+  for (const x of [-0.09, 0.09]) {
+    const ear = shape(
+      CreateCylinder(
+        'pupEar',
+        { diameterTop: 0, diameterBottom: 0.1, height: 0.12, tessellation: 4 },
+        scene,
+      ),
+      '#C76F26',
+      o,
+    );
+    ear.position.set(x, 0.56, 0.22);
+  }
+  const collar = shape(
+    CreateCylinder('pupCollar', { diameter: 0.28, height: 0.05, tessellation: 16 }, scene),
+    '#E63946',
+    o,
+  );
+  collar.position.set(0, 0.32, 0.16);
+  const tail = shape(
+    CreateCylinder('pupTail', { diameter: 0.06, height: 0.25 }, scene),
+    '#E08738',
+    o,
+  );
+  tail.position.set(0, 0.34, -0.28);
+  tail.rotation.x = -1.1;
+  root.scaling.setAll(1.15);
+  return root;
+};
+
+export const buildBunny = (ctx: SceneContext): TransformNode =>
+  ctx.model('pet/bunny', () => buildProceduralBunny(ctx));
+
+const buildProceduralBunny = (ctx: SceneContext): TransformNode => {
+  const { scene, shape } = ctx;
+  const root = new TransformNode('bunny', scene);
+  const o = { parent: root };
+  shape(
+    CreateSphere(
+      'bunBody',
+      { diameterX: 0.3, diameterY: 0.28, diameterZ: 0.38, segments: 12 },
+      scene,
+    ),
+    '#FAF8F5',
+    o,
+  ).position.y = 0.18;
+  shape(
+    CreateSphere('bunHead', { diameter: 0.24, segments: 12 }, scene),
+    '#FAF8F5',
+    o,
+  ).position.set(0, 0.35, 0.18);
+  for (const x of [-0.06, 0.06]) {
+    const ear = shape(
+      CreateCylinder(
+        'bunEar',
+        { diameterTop: 0.03, diameterBottom: 0.07, height: 0.28, tessellation: 8 },
+        scene,
+      ),
+      '#FAF8F5',
+      o,
+    );
+    ear.position.set(x, 0.52, 0.16);
+    shape(
+      CreateSphere('bunEarInner', { diameterX: 0.03, diameterY: 0.2, diameterZ: 0.02 }, scene),
+      '#FFAEC9',
+      { parent: ear },
+    ).position.z = 0.02;
+  }
+  shape(CreateSphere('bunTail', { diameter: 0.1 }, scene), '#FAF8F5', o).position.set(
+    0,
+    0.2,
+    -0.22,
+  );
+  root.scaling.setAll(1.1);
+  return root;
+};
+
+export const buildDuckling = (ctx: SceneContext): TransformNode =>
+  ctx.model('pet/duckling', () => buildProceduralDuckling(ctx));
+
+const buildProceduralDuckling = (ctx: SceneContext): TransformNode => {
+  const { scene, shape } = ctx;
+  const root = new TransformNode('duckling', scene);
+  const o = { parent: root };
+  shape(
+    CreateSphere(
+      'duckBody',
+      { diameterX: 0.28, diameterY: 0.25, diameterZ: 0.36, segments: 12 },
+      scene,
+    ),
+    '#FFD13B',
+    o,
+  ).position.y = 0.16;
+  shape(
+    CreateSphere('duckHead', { diameter: 0.22, segments: 12 }, scene),
+    '#FFD13B',
+    o,
+  ).position.set(0, 0.32, 0.16);
+  const bill = shape(
+    CreateBox('duckBill', { width: 0.12, depth: 0.14, height: 0.04 }, scene),
+    '#FF7F11',
+    o,
+  );
+  bill.position.set(0, 0.3, 0.3);
+  root.scaling.setAll(1.1);
+  return root;
+};
+
+export const buildPet = (ctx: SceneContext, pet: string): TransformNode => {
+  switch (pet) {
+    case 'puppy':
+      return buildPuppy(ctx);
+    case 'bunny':
+      return buildBunny(ctx);
+    case 'duckling':
+      return buildDuckling(ctx);
+    default:
+      return buildCat(ctx);
+  }
 };
 
 const hedgehog = (ctx: SceneContext, root: TransformNode): void => {

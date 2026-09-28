@@ -1,11 +1,25 @@
-import { CROP_IDS, CROPS, DECORATION_IDS, DECORATIONS, FISH, FISH_IDS } from '../core/config';
+import {
+  CROP_IDS,
+  CROPS,
+  DECORATION_IDS,
+  DECORATIONS,
+  FISH,
+  FISH_IDS,
+  FORAGE,
+  FORAGE_IDS,
+  FRUITS,
+  FRUIT_IDS,
+  ISLET_EXPANSION,
+  PETS,
+  PET_IDS,
+} from '../core/config';
 import type { GameState } from '../core/types';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
 import { type Component, h } from './dom';
 import { CROP_ICONS } from './text';
 
-export type ShopTab = 'seeds' | 'decor' | 'sell';
+export type ShopTab = 'seeds' | 'decor' | 'pets' | 'sell';
 
 export interface ShopPanel extends Component {
   open(tab?: ShopTab): void;
@@ -14,7 +28,7 @@ export interface ShopPanel extends Component {
   readonly tab: ShopTab;
 }
 
-/** Market stand: buy seeds and decorations, sell produce. Re-renders only while open. */
+/** Market stand: buy seeds and decorations, adopt pets, sell produce. Re-renders only while open. */
 export const createShopPanel = (store: Store): ShopPanel => {
   let tab: ShopTab = 'seeds';
   let isOpen = false;
@@ -24,6 +38,7 @@ export const createShopPanel = (store: Store): ShopPanel => {
   for (const [id, label] of [
     ['seeds', 'Seeds'],
     ['decor', 'Decor'],
+    ['pets', 'Pets 🐾'],
     ['sell', 'Sell'],
   ] as const) {
     const b = h(
@@ -116,6 +131,19 @@ export const createShopPanel = (store: Store): ShopPanel => {
       );
     });
 
+    if (!s.isletUnlocked) {
+      const canUnlock = s.bloom >= ISLET_EXPANSION.requiredBloom && s.coins >= ISLET_EXPANSION.cost;
+      items.unshift(
+        row(
+          '🌉 Restore Orchard Bridge',
+          s.bloom < ISLET_EXPANSION.requiredBloom
+            ? `Requires ${ISLET_EXPANSION.requiredBloom} Bloom points`
+            : `${ISLET_EXPANSION.cost} coins · Unlock fruit orchard islet!`,
+          btn('Restore', () => store.dispatch(actions.unlockIslet()), !canUnlock, 'unlock-islet'),
+        ),
+      );
+    }
+
     if (s.plot.height < 7) {
       const nextHeight = s.plot.height + 1;
       const cost = nextHeight === 5 ? 50 : nextHeight === 6 ? 100 : 180;
@@ -135,6 +163,24 @@ export const createShopPanel = (store: Store): ShopPanel => {
     return items;
   };
 
+  const renderPets = (s: GameState): HTMLElement[] => {
+    const currentPets = s.pets ?? ['cat'];
+    return PET_IDS.map((p) => {
+      const def = PETS[p];
+      const owned = currentPets.includes(p);
+      return row(
+        `${def.icon} ${def.name}`,
+        owned ? `${def.description} (Adopted)` : `${def.cost} coins · ${def.description}`,
+        btn(
+          owned ? 'Adopted ❤️' : `Adopt (${def.cost}g)`,
+          () => store.dispatch(actions.adoptPet(p)),
+          owned || s.coins < def.cost,
+          `adopt-${p}`,
+        ),
+      );
+    });
+  };
+
   const renderSell = (s: GameState): HTMLElement[] => {
     const cropRows = CROP_IDS.filter((c) => s.inventory.produce[c] > 0).map((c) =>
       row(
@@ -150,13 +196,39 @@ export const createShopPanel = (store: Store): ShopPanel => {
         btn('Sell 1', () => store.dispatch(actions.sellFish(f, 1)), false, `sell-fish-${f}-1`),
       ),
     );
-    const rows = [...cropRows, ...fishRows];
+    const forageRows = FORAGE_IDS.filter((item) => (s.forageInventory?.[item] ?? 0) > 0).map(
+      (item) =>
+        row(
+          `${FORAGE[item].icon} ${FORAGE[item].name} × ${s.forageInventory?.[item]}`,
+          `${FORAGE[item].sellPrice} coins each`,
+          btn(
+            'Sell 1',
+            () => store.dispatch(actions.sellForage(item, 1)),
+            false,
+            `sell-forage-${item}-1`,
+          ),
+        ),
+    );
+    const fruitRows = FRUIT_IDS.filter((fruit) => (s.fruitInventory?.[fruit] ?? 0) > 0).map(
+      (fruit) =>
+        row(
+          `${FRUITS[fruit].icon} ${FRUITS[fruit].name} × ${s.fruitInventory?.[fruit]}`,
+          `${FRUITS[fruit].sellPrice} coins each`,
+          btn(
+            'Sell 1',
+            () => store.dispatch(actions.sellFruit(fruit, 1)),
+            false,
+            `sell-fruit-${fruit}-1`,
+          ),
+        ),
+    );
+    const rows = [...cropRows, ...fishRows, ...forageRows, ...fruitRows];
     if (!rows.length)
       return [
         h(
           'p',
           { class: 'empty' },
-          'Nothing to sell yet. Harvest crops or catch fish from the pond!',
+          'Nothing to sell yet. Harvest crops, catch fish, or forage the shoreline!',
         ),
       ];
     return [
@@ -177,7 +249,13 @@ export const createShopPanel = (store: Store): ShopPanel => {
     }
     const s = store.getState();
     const content =
-      tab === 'seeds' ? renderSeeds(s) : tab === 'decor' ? renderDecor(s) : renderSell(s);
+      tab === 'seeds'
+        ? renderSeeds(s)
+        : tab === 'decor'
+          ? renderDecor(s)
+          : tab === 'pets'
+            ? renderPets(s)
+            : renderSell(s);
     body.replaceChildren(...content);
   };
 

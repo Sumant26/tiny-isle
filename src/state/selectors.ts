@@ -61,3 +61,6 @@ export const selectVisitorInfo = (s: GameState): VisitorInfo | null => {
     canFulfill: have >= def.wants.quantity,
   };
 };
+
+export const selectSeason = (s: GameState): 'spring' | 'summer' | 'autumn' | 'winter' =>
+  s.season ?? 'spring';

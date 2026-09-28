@@ -3,7 +3,11 @@ import type {
   CropId,
   DecorationId,
   FishId,
+  ForageId,
+  FruitId,
   GameState,
+  MusicTrackId,
+  PetId,
   RecipeId,
   Settings,
   ToolId,
@@ -42,6 +46,23 @@ export type Action =
   | { readonly type: 'pond/fish' }
   | { readonly type: 'pond/eatFish'; readonly fish: FishId }
   | { readonly type: 'market/sellFish'; readonly fish: FishId; readonly quantity: number }
+  | {
+      readonly type: 'market/sellForage';
+      readonly item: ForageId;
+      readonly quantity: number;
+    }
+  | {
+      readonly type: 'market/sellFruit';
+      readonly fruit: FruitId;
+      readonly quantity: number;
+    }
+  | { readonly type: 'forage/collect'; readonly nodeId: string }
+  | { readonly type: 'visitor/gift'; readonly recipe: RecipeId | 'tea' }
+  | { readonly type: 'islet/unlock' }
+  | { readonly type: 'orchard/harvest' }
+  | { readonly type: 'pet/adopt'; readonly pet: PetId }
+  | { readonly type: 'pet/interact'; readonly pet: PetId }
+  | { readonly type: 'music/setTrack'; readonly track: MusicTrackId }
   | { readonly type: 'cat/pet' }
   | { readonly type: 'visitor/fulfill' }
   | { readonly type: 'settings/update'; readonly patch: Partial<Settings> }
@@ -63,6 +84,16 @@ export const actions = {
     fish,
     quantity,
   }),
+  sellForage: (item: ForageId, quantity: number): Action => ({
+    type: 'market/sellForage',
+    item,
+    quantity,
+  }),
+  sellFruit: (fruit: FruitId, quantity: number): Action => ({
+    type: 'market/sellFruit',
+    fruit,
+    quantity,
+  }),
   sellAll: (): Action => ({ type: 'market/sellAll' }),
   buySeeds: (crop: CropId, quantity: number): Action => ({ type: 'shop/buySeeds', crop, quantity }),
   buyDecoration: (decoration: DecorationId): Action => ({ type: 'shop/buyDecoration', decoration }),
@@ -81,6 +112,13 @@ export const actions = {
       | 'take_nap',
   ): Action => ({ type: 'cottage/activity', activity }),
   fish: (): Action => ({ type: 'pond/fish' }),
+  collectForage: (nodeId: string): Action => ({ type: 'forage/collect', nodeId }),
+  giftVisitor: (recipe: RecipeId | 'tea'): Action => ({ type: 'visitor/gift', recipe }),
+  unlockIslet: (): Action => ({ type: 'islet/unlock' }),
+  harvestOrchard: (): Action => ({ type: 'orchard/harvest' }),
+  adoptPet: (pet: PetId): Action => ({ type: 'pet/adopt', pet }),
+  interactPet: (pet: PetId): Action => ({ type: 'pet/interact', pet }),
+  setMusicTrack: (track: MusicTrackId): Action => ({ type: 'music/setTrack', track }),
   petCat: (): Action => ({ type: 'cat/pet' }),
   fulfillVisitor: (): Action => ({ type: 'visitor/fulfill' }),
   updateSettings: (patch: Partial<Settings>): Action => ({ type: 'settings/update', patch }),

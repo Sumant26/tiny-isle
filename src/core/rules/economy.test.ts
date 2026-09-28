@@ -20,11 +20,15 @@ describe('sell', () => {
 });
 
 describe('sellAll', () => {
-  it('sells every kind of produce', () => {
-    const s = withProduce(withProduce(makeState({ coins: 0 }), 'carrot', 2), 'tomato', 1);
+  it('sells every kind of produce, fish, forage and fruit', () => {
+    const s = {
+      ...withProduce(withProduce(makeState({ coins: 0 }), 'carrot', 2), 'tomato', 1),
+      forageInventory: { mushroom: 1, berry: 0, seashell: 0, wildflower: 0 },
+      fruitInventory: { apple: 1, cherry: 0, citrus: 0 },
+    };
     const r = sellAll(s);
-    expect(r.state.coins).toBe(16);
-    expect(r.events).toHaveLength(2);
+    expect(r.state.coins).toBe(38); // 10 (carrots) + 6 (tomato) + 8 (mushroom) + 14 (apple)
+    expect(r.events).toHaveLength(4);
   });
 
   it('rejects when there is nothing to sell', () => {

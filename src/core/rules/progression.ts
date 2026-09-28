@@ -1,7 +1,8 @@
 import { bloomLevel } from '../bloom';
-import { BALANCE } from '../config';
+import { BALANCE, ISLET_EXPANSION } from '../config';
 import type { CropId, GameEvent, GameState, Outcome } from '../types';
-import { ok } from './outcome';
+import { unlockAchievement } from './achievements';
+import { chain, ok, reject } from './outcome';
 
 export const unlockCrop = (state: GameState, crop: CropId): Outcome =>
   state.unlockedCrops.includes(crop)
@@ -28,4 +29,51 @@ export const addBloom = (state: GameState, points: number): Outcome => {
     }
   }
   return { state: next, events };
+};
+
+export const unlockIslet = (state: GameState): Outcome => {
+  if (state.isletUnlocked) return reject(state, 'already-owned');
+  if (state.bloom < ISLET_EXPANSION.requiredBloom) return reject(state, 'locked');
+  if (state.coins < ISLET_EXPANSION.cost) return reject(state, 'not-enough-coins');
+
+  const journal = state.journal ?? [];
+  const entry = 'Restored the rustic footbridge and unlocked the Orchard Islet!';
+  const nextJournal = journal.includes(entry) ? journal : [...journal, entry];
+
+  const next: GameState = {
+    ...state,
+    coins: state.coins - ISLET_EXPANSION.cost,
+    isletUnlocked: true,
+    journal: nextJournal,
+  };
+
+  let outcome = ok(next, { type: 'islet-unlocked' }, { type: 'journal-entry', entry });
+  outcome = chain(outcome, (s) => addBloom(s, 15));
+  outcome = chain(outcome, (s) => unlockAchievement(s, 'orchard_expansion'));
+  return outcome;
+};
+
+export const harvestOrchard = (state: GameState): Outcome => {
+  if (!state.isletUnlocked) return reject(state, 'islet-locked');
+
+  const curFruits = state.fruitInventory ?? { apple: 0, cherry: 0, citrus: 0 };
+  const next: GameState = {
+    ...state,
+    fruitInventory: {
+      apple: (curFruits.apple ?? 0) + 2,
+      cherry: (curFruits.cherry ?? 0) + 2,
+      citrus: (curFruits.citrus ?? 0) + 2,
+    },
+    stats: {
+      ...state.stats,
+      harvested: state.stats.harvested + 6,
+    },
+  };
+
+  return ok(
+    next,
+    { type: 'orchard-harvested', fruit: 'apple', count: 2 },
+    { type: 'orchard-harvested', fruit: 'cherry', count: 2 },
+    { type: 'orchard-harvested', fruit: 'citrus', count: 2 },
+  );
 };

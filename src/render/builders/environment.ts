@@ -19,6 +19,9 @@ export interface Environment {
   readonly lampLight: PointLight;
   readonly lamp: Mesh;
   readonly cottageWindow: Mesh;
+  readonly rockingChair?: TransformNode;
+  readonly flowerBoxFlowers?: Mesh[];
+  readonly isletRoot?: TransformNode;
   readonly swaying: TransformNode[];
 }
 
@@ -27,71 +30,10 @@ const at = (node: TransformNode, c: Cell, y = GROUND_Y): void => {
   node.position.set(w.x, y, w.z);
 };
 
-const buildIsland = (ctx: SceneContext, root: TransformNode): Mesh => {
-  const { scene, shape } = ctx;
-  const opts = { parent: root, castShadow: false };
-  shape(
-    CreateCylinder(
-      'dirt',
-      { diameterTop: 17, diameterBottom: 13, height: 2.4, tessellation: 64 },
-      scene,
-    ),
-    PALETTE.dirt,
-    opts,
-  ).position.y = -1.3;
-  shape(
-    CreateCylinder(
-      'dirtDeep',
-      { diameterTop: 12.6, diameterBottom: 6, height: 2.2, tessellation: 64 },
-      scene,
-    ),
-    PALETTE.dirtDeep,
-    opts,
-  ).position.y = -3.4;
-  const ground = shape(
-    CreateCylinder('ground', { diameter: 17.4, height: 0.5, tessellation: 64 }, scene),
-    PALETTE.grass,
-    opts,
-  );
-  shape(
-    CreateTorus('lip', { diameter: 17.2, thickness: 0.5, tessellation: 64 }, scene),
-    PALETTE.grassLip,
-    { ...opts, pickable: false },
-  ).position.y = 0.02;
-  return ground;
-};
-
-const buildPond = (ctx: SceneContext, root: TransformNode): void => {
-  const { scene, shape } = ctx;
-  const node = new TransformNode('pond', scene);
-  node.parent = root;
-  const c = rectCenterWorld(LAYOUT.pond);
-  node.position.set(c.x, 0, c.z);
-  const o = { parent: node, castShadow: false };
-  shape(
-    CreateCylinder('pondRim', { diameter: 3.4, height: 0.3, tessellation: 48 }, scene),
-    PALETTE.stone,
-    o,
-  ).position.y = 0.2;
-  shape(
-    CreateCylinder('pondWater', { diameter: 2.8, height: 0.32, tessellation: 48 }, scene),
-    PALETTE.water,
-    o,
-  ).position.y = 0.22;
-  const lily = shape(
-    CreateCylinder('lily', { diameter: 0.7, height: 0.05, tessellation: 24, arc: 0.85 }, scene),
-    PALETTE.strawberryLeaf,
-    o,
-  );
-  lily.position.set(0.5, 0.4, -0.4);
-  shape(CreateSphere('lilyFlower', { diameter: 0.22 }, scene), PALETTE.flowers[0], o).position.set(
-    0.5,
-    0.46,
-    -0.4,
-  );
-};
-
-const buildCottage = (ctx: SceneContext, root: TransformNode): Mesh => {
+const buildCottage = (
+  ctx: SceneContext,
+  root: TransformNode,
+): { windowMesh: Mesh; rockingChair: TransformNode; flowerBoxFlowers: Mesh[] } => {
   const { scene, shape } = ctx;
   const node = new TransformNode('cottage', scene);
   node.parent = root;
@@ -104,6 +46,113 @@ const buildCottage = (ctx: SceneContext, root: TransformNode): Mesh => {
     { parent: node },
   );
   windowMesh.position.set(-0.5, 0.95, 0.96);
+
+  // Window Flower Box with seasonal flowers
+  const flowerBox = shape(
+    CreateBox('flowerBox', { width: 0.62, depth: 0.22, height: 0.16 }, scene),
+    PALETTE.woodDark,
+    { parent: node },
+  );
+  flowerBox.position.set(-0.5, 0.68, 1.05);
+
+  const flowerBoxFlowers: Mesh[] = [];
+  for (let i = 0; i < 4; i++) {
+    const fl = shape(
+      CreateSphere(`boxFlower_${i}`, { diameter: 0.13, segments: 6 }, scene),
+      PALETTE.flowers[i % PALETTE.flowers.length] ?? PALETTE.petal,
+      { parent: flowerBox, castShadow: false },
+    );
+    fl.position.set(-0.22 + i * 0.14, 0.12, 0);
+    flowerBoxFlowers.push(fl);
+  }
+
+  // Porch Deck and Overhang
+  const porchDeck = shape(
+    CreateBox('porchDeck', { width: 2.3, depth: 0.8, height: 0.12 }, scene),
+    PALETTE.woodDark,
+    { parent: node },
+  );
+  porchDeck.position.set(0, 0.06, 1.35);
+
+  for (const x of [-0.95, 0.95]) {
+    const post = shape(
+      CreateCylinder('porchPost', { diameter: 0.08, height: 1.4 }, scene),
+      PALETTE.bark,
+      { parent: node },
+    );
+    post.position.set(x, 0.7, 1.68);
+  }
+
+  const porchRoof = shape(
+    CreateBox('porchRoof', { width: 2.45, depth: 0.9, height: 0.08 }, scene),
+    PALETTE.roof,
+    { parent: node },
+  );
+  porchRoof.position.set(0, 1.42, 1.35);
+  porchRoof.rotation.x = 0.15;
+
+  // Porch Rocking Chair
+  const rockingChair = new TransformNode('rockingChair', scene);
+  rockingChair.parent = node;
+  rockingChair.position.set(-0.6, 0.12, 1.35);
+
+  for (const x of [-0.14, 0.14]) {
+    const runner = shape(
+      CreateBox('runner', { width: 0.04, depth: 0.42, height: 0.04 }, scene),
+      PALETTE.woodLight,
+      { parent: rockingChair },
+    );
+    runner.position.set(x, 0.02, 0);
+    runner.rotation.x = -0.05;
+  }
+  const seat = shape(
+    CreateBox('seat', { width: 0.32, depth: 0.28, height: 0.04 }, scene),
+    PALETTE.wood,
+    { parent: rockingChair },
+  );
+  seat.position.set(0, 0.18, 0);
+  const back = shape(
+    CreateBox('chairBack', { width: 0.3, depth: 0.04, height: 0.34 }, scene),
+    PALETTE.wood,
+    { parent: rockingChair },
+  );
+  back.position.set(0, 0.35, -0.12);
+  back.rotation.x = -0.12;
+
+  // Vintage Brass Gramophone on Porch Side Table
+  const table = shape(
+    CreateCylinder('table', { diameter: 0.3, height: 0.3 }, scene),
+    PALETTE.woodDark,
+    { parent: node },
+  );
+  table.position.set(0.65, 0.21, 1.35);
+
+  const gramoBase = shape(
+    CreateBox('gramoBase', { width: 0.18, depth: 0.18, height: 0.08 }, scene),
+    PALETTE.wood,
+    { parent: table },
+  );
+  gramoBase.position.y = 0.18;
+
+  const vinyl = shape(
+    CreateCylinder('vinyl', { diameter: 0.16, height: 0.02, tessellation: 16 }, scene),
+    '#1A1A1A',
+    { parent: gramoBase },
+  );
+  vinyl.position.y = 0.05;
+
+  const horn = shape(
+    CreateCylinder(
+      'gramoHorn',
+      { diameterTop: 0.2, diameterBottom: 0.04, height: 0.22, tessellation: 12 },
+      scene,
+    ),
+    '#DDA15E',
+    { parent: gramoBase },
+  );
+  horn.position.set(0.04, 0.18, -0.02);
+  horn.rotation.x = -0.45;
+  horn.rotation.z = 0.25;
 
   const model = ctx.model('prop/cottage', () => {
     const proc = new TransformNode('cottageProcedural', scene);
@@ -135,7 +184,7 @@ const buildCottage = (ctx: SceneContext, root: TransformNode): Mesh => {
     return proc;
   });
   model.parent = node;
-  return windowMesh;
+  return { windowMesh, rockingChair, flowerBoxFlowers };
 };
 
 const buildTree = (ctx: SceneContext, root: TransformNode): TransformNode => {
@@ -356,6 +405,204 @@ const buildPathAndFlowers = (
   }
 };
 
+const buildIsland = (ctx: SceneContext, root: TransformNode): Mesh => {
+  const { scene, shape } = ctx;
+  const opts = { parent: root, castShadow: false };
+  shape(
+    CreateCylinder(
+      'dirt',
+      { diameterTop: 17, diameterBottom: 13, height: 2.4, tessellation: 64 },
+      scene,
+    ),
+    PALETTE.dirt,
+    opts,
+  ).position.y = -1.3;
+  shape(
+    CreateCylinder(
+      'dirtDeep',
+      { diameterTop: 12.6, diameterBottom: 6, height: 2.2, tessellation: 64 },
+      scene,
+    ),
+    PALETTE.dirtDeep,
+    opts,
+  ).position.y = -3.4;
+  const ground = shape(
+    CreateCylinder('ground', { diameter: 17.4, height: 0.5, tessellation: 64 }, scene),
+    PALETTE.grass,
+    opts,
+  );
+  shape(
+    CreateTorus('lip', { diameter: 17.2, thickness: 0.5, tessellation: 64 }, scene),
+    PALETTE.grassLip,
+    { ...opts, pickable: false },
+  ).position.y = 0.02;
+  return ground;
+};
+
+const buildPond = (ctx: SceneContext, root: TransformNode): void => {
+  const { scene, shape } = ctx;
+  const node = new TransformNode('pond', scene);
+  node.parent = root;
+  const c = rectCenterWorld(LAYOUT.pond);
+  node.position.set(c.x, 0, c.z);
+  const o = { parent: node, castShadow: false };
+  shape(
+    CreateCylinder('pondRim', { diameter: 3.4, height: 0.3, tessellation: 48 }, scene),
+    PALETTE.stone,
+    o,
+  ).position.y = 0.2;
+  shape(
+    CreateCylinder('pondWater', { diameter: 2.8, height: 0.32, tessellation: 48 }, scene),
+    PALETTE.water,
+    o,
+  ).position.y = 0.22;
+  const lily = shape(
+    CreateCylinder('lily', { diameter: 0.7, height: 0.05, tessellation: 24, arc: 0.85 }, scene),
+    PALETTE.strawberryLeaf,
+    o,
+  );
+  lily.position.set(0.5, 0.4, -0.4);
+  shape(CreateSphere('lilyFlower', { diameter: 0.22 }, scene), PALETTE.flowers[0], o).position.set(
+    0.5,
+    0.46,
+    -0.4,
+  );
+};
+
+const buildPier = (ctx: SceneContext, root: TransformNode): void => {
+  const { scene, shape } = ctx;
+  const node = new TransformNode('pier', scene);
+  node.parent = root;
+  node.position.set(-6.5, 0, 2.5);
+
+  // Deck planks
+  const deck = shape(
+    CreateBox('pierDeck', { width: 2.6, depth: 1.2, height: 0.12 }, scene),
+    PALETTE.woodDark,
+    { parent: node },
+  );
+  deck.position.y = 0.32;
+
+  // Support Pilings into water
+  for (const [x, z] of [
+    [-1.0, -0.45],
+    [1.0, -0.45],
+    [-1.0, 0.45],
+    [1.0, 0.45],
+  ] as const) {
+    const piling = shape(
+      CreateCylinder('pierPiling', { diameter: 0.14, height: 1.2 }, scene),
+      PALETTE.bark,
+      { parent: node },
+    );
+    piling.position.set(x, -0.2, z);
+  }
+
+  // Pier End Lantern Post
+  const post = shape(
+    CreateCylinder('pierPost', { diameter: 0.1, height: 0.9 }, scene),
+    PALETTE.wood,
+    { parent: node },
+  );
+  post.position.set(-1.1, 0.7, 0.45);
+
+  const lantern = shape(
+    CreateBox('pierLantern', { size: 0.2 }, scene),
+    ctx.material(PALETTE.lampGlow, '#4A3F20'),
+    { parent: post, castShadow: false },
+  );
+  lantern.position.y = 0.45;
+};
+
+const buildOrchardIslet = (
+  ctx: SceneContext,
+  root: TransformNode,
+): { isletRoot: TransformNode; orchardTrees: TransformNode[] } => {
+  const { scene, shape } = ctx;
+  const isletRoot = new TransformNode('orchardIslet', scene);
+  isletRoot.parent = root;
+  isletRoot.position.set(10.5, 0, -4.5);
+
+  // Arched wooden footbridge connecting main island to islet
+  const bridge = new TransformNode('bridge', scene);
+  bridge.parent = root;
+  bridge.position.set(7.5, 0, -4.5);
+
+  const bridgeDeck = shape(
+    CreateBox('bridgeDeck', { width: 3.2, depth: 0.9, height: 0.1 }, scene),
+    PALETTE.woodDark,
+    { parent: bridge },
+  );
+  bridgeDeck.position.y = 0.38;
+  bridgeDeck.rotation.z = -0.05;
+
+  for (const z of [-0.4, 0.4]) {
+    const rail = shape(
+      CreateBox('bridgeRail', { width: 3.2, depth: 0.06, height: 0.06 }, scene),
+      PALETTE.woodLight,
+      { parent: bridge },
+    );
+    rail.position.set(0, 0.65, z);
+  }
+
+  // Islet mound
+  shape(
+    CreateCylinder(
+      'isletDirt',
+      { diameterTop: 6.2, diameterBottom: 4.5, height: 1.8, tessellation: 32 },
+      scene,
+    ),
+    PALETTE.dirt,
+    { parent: isletRoot, castShadow: false },
+  ).position.y = -0.9;
+
+  shape(
+    CreateCylinder('isletGrass', { diameter: 6.4, height: 0.4, tessellation: 32 }, scene),
+    PALETTE.grass,
+    { parent: isletRoot, castShadow: false },
+  ).position.y = 0.1;
+
+  // 3 Fruit Orchard Trees
+  const orchardTrees: TransformNode[] = [];
+  const treeDefs = [
+    { name: 'appleTree', pos: [-1.2, 0, -0.6], leafHex: PALETTE.leaf, fruitHex: PALETTE.tomato },
+    { name: 'cherryTree', pos: [1.1, 0, -0.5], leafHex: '#FFAAA6', fruitHex: '#D90429' },
+    { name: 'citrusTree', pos: [0, 0, 1.2], leafHex: PALETTE.leafLight, fruitHex: '#FFD166' },
+  ] as const;
+
+  for (const def of treeDefs) {
+    const tNode = new TransformNode(def.name, scene);
+    tNode.parent = isletRoot;
+    tNode.position.set(def.pos[0], 0.2, def.pos[2]);
+
+    shape(
+      CreateCylinder('trunk', { diameterTop: 0.22, diameterBottom: 0.35, height: 1.2 }, scene),
+      PALETTE.bark,
+      { parent: tNode },
+    ).position.y = 0.6;
+
+    shape(CreateSphere('canopy', { diameter: 1.5, segments: 10 }, scene), def.leafHex, {
+      parent: tNode,
+    }).position.y = 1.6;
+
+    // Fruits on tree
+    const fruitCoords: readonly (readonly [number, number, number])[] = [
+      [0.4, 1.5, 0.5],
+      [-0.4, 1.6, 0.4],
+      [0.1, 1.8, 0.6],
+    ];
+    for (const [fx, fy, fz] of fruitCoords) {
+      shape(CreateSphere('fruit', { diameter: 0.16 }, scene), def.fruitHex, {
+        parent: tNode,
+        castShadow: false,
+      }).position.set(fx, fy, fz);
+    }
+    orchardTrees.push(tNode);
+  }
+
+  return { isletRoot, orchardTrees };
+};
+
 /** Builds all static scenery from the shared world layout. */
 export const buildEnvironment = (
   ctx: SceneContext,
@@ -364,11 +611,23 @@ export const buildEnvironment = (
   const root = new TransformNode('environment', ctx.scene);
   const ground = buildIsland(ctx, root);
   buildPond(ctx, root);
-  const cottageWindow = buildCottage(ctx, root);
+  buildPier(ctx, root);
+  const { windowMesh, rockingChair, flowerBoxFlowers } = buildCottage(ctx, root);
+  const { isletRoot, orchardTrees } = buildOrchardIslet(ctx, root);
   const tree = buildTree(ctx, root);
   buildMarket(ctx, root);
   const { lamp, light } = buildLantern(ctx, root);
   buildFence(ctx, root);
   buildPathAndFlowers(ctx, root, random);
-  return { root, ground, lampLight: light, lamp, cottageWindow, swaying: [tree] };
+  return {
+    root,
+    ground,
+    lampLight: light,
+    lamp,
+    cottageWindow: windowMesh,
+    rockingChair,
+    flowerBoxFlowers,
+    isletRoot,
+    swaying: [tree, ...orchardTrees],
+  };
 };

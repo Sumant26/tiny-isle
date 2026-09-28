@@ -1,5 +1,24 @@
-import { CROP_IDS, CROPS, DECORATIONS, FISH, FISH_IDS } from '../config';
-import type { CropId, DecorationId, FishId, GameEvent, GameState, Outcome } from '../types';
+import {
+  CROP_IDS,
+  CROPS,
+  DECORATIONS,
+  FISH,
+  FISH_IDS,
+  FORAGE,
+  FORAGE_IDS,
+  FRUITS,
+  FRUIT_IDS,
+} from '../config';
+import type {
+  CropId,
+  DecorationId,
+  FishId,
+  ForageId,
+  FruitId,
+  GameEvent,
+  GameState,
+  Outcome,
+} from '../types';
 import { addCount, chain, ok, reject } from './outcome';
 import { addBloom } from './progression';
 
@@ -44,6 +63,46 @@ export const sellFish = (state: GameState, fish: FishId, quantity: number): Outc
   );
 };
 
+export const sellForage = (state: GameState, item: ForageId, quantity: number): Outcome => {
+  const current = state.forageInventory?.[item] ?? 0;
+  if (!isPositiveInt(quantity) || current < quantity) {
+    return reject(state, 'not-enough-forage');
+  }
+  const coins = FORAGE[item].sellPrice * quantity;
+  return ok(
+    {
+      ...state,
+      coins: state.coins + coins,
+      forageInventory: {
+        ...state.forageInventory,
+        [item]: current - quantity,
+      },
+      stats: { ...state.stats, earned: state.stats.earned + coins },
+    },
+    { type: 'sold', crop: 'carrot', quantity, coins },
+  );
+};
+
+export const sellFruit = (state: GameState, fruit: FruitId, quantity: number): Outcome => {
+  const current = state.fruitInventory?.[fruit] ?? 0;
+  if (!isPositiveInt(quantity) || current < quantity) {
+    return reject(state, 'not-enough-fruit');
+  }
+  const coins = FRUITS[fruit].sellPrice * quantity;
+  return ok(
+    {
+      ...state,
+      coins: state.coins + coins,
+      fruitInventory: {
+        ...state.fruitInventory,
+        [fruit]: current - quantity,
+      },
+      stats: { ...state.stats, earned: state.stats.earned + coins },
+    },
+    { type: 'sold', crop: 'carrot', quantity, coins },
+  );
+};
+
 export const sellAll = (state: GameState): Outcome => {
   const events: GameEvent[] = [];
   let next = state;
@@ -59,6 +118,22 @@ export const sellAll = (state: GameState): Outcome => {
     const qty = next.fishInventory?.[f] ?? 0;
     if (qty > 0) {
       const r = sellFish(next, f, qty);
+      next = r.state;
+      events.push(...r.events);
+    }
+  }
+  for (const item of FORAGE_IDS) {
+    const qty = next.forageInventory?.[item] ?? 0;
+    if (qty > 0) {
+      const r = sellForage(next, item, qty);
+      next = r.state;
+      events.push(...r.events);
+    }
+  }
+  for (const fruit of FRUIT_IDS) {
+    const qty = next.fruitInventory?.[fruit] ?? 0;
+    if (qty > 0) {
+      const r = sellFruit(next, fruit, qty);
       next = r.state;
       events.push(...r.events);
     }

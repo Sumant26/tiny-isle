@@ -55,14 +55,69 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
   const visitor = createVisitorCard(store);
   const dayOverlay = createDayOverlay();
   const prompt = createActionPrompt();
+  const closeAll = (except?: unknown): void => {
+    if (photo.isActive && photo !== except) photo.exit();
+    if (help.isOpen && help !== except) help.hide();
+    if (settings.isOpen && settings !== except) settings.close();
+    if (shop.isOpen && shop !== except) shop.close();
+    if (journal.isOpen && journal !== except) journal.hide();
+    if (cook.isOpen && cook !== except) cook.hide();
+    if (fish.isOpen && fish !== except) fish.hide();
+  };
+
+  const origShopOpen = shop.open.bind(shop);
+  shop.open = (tab) => {
+    closeAll(shop);
+    origShopOpen(tab);
+  };
+
+  const origCookShow = cook.show.bind(cook);
+  cook.show = () => {
+    closeAll(cook);
+    origCookShow();
+  };
+
+  const origFishShow = fish.show.bind(fish);
+  fish.show = () => {
+    closeAll(fish);
+    origFishShow();
+  };
+
+  const origJournalShow = journal.show.bind(journal);
+  journal.show = () => {
+    closeAll(journal);
+    origJournalShow();
+  };
 
   const hud = createHud(store, {
-    onSettings: () => settings.toggle(),
-    onHelp: () => help.show(),
-    onJournal: () => journal.show(),
-    onPhotoMode: () => photo.enter(),
+    onSettings: () => {
+      if (settings.isOpen) {
+        settings.close();
+      } else {
+        closeAll(settings);
+        settings.toggle();
+      }
+    },
+    onHelp: () => {
+      closeAll(help);
+      help.show();
+    },
+    onJournal: () => {
+      closeAll(journal);
+      journal.show();
+    },
+    onPhotoMode: () => {
+      closeAll(photo);
+      photo.enter();
+    },
   });
-  const hotbar = createHotbar(store, { onSleep: handlers.onSleep, onShop: handlers.onShop });
+  const hotbar = createHotbar(store, {
+    onSleep: handlers.onSleep,
+    onShop: () => {
+      closeAll(shop);
+      handlers.onShop();
+    },
+  });
 
   const parts = [hud, hotbar, toasts, prompt, visitor, shop, settings, help, dayOverlay];
   root.append(...parts.map((p) => p.el));

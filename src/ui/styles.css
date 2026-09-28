@@ -898,6 +898,32 @@ body.colorblind-mode .slot::after {
   color: var(--ink);
 }
 
+/* Photo Mode */
+.photo-mode-active .hud,
+.photo-mode-active .hotbar,
+.photo-mode-active .visitor-card,
+.photo-mode-active .toasts,
+.photo-mode-active .action-prompt,
+.photo-mode-active .panel,
+.photo-mode-active dialog {
+  display: none !important;
+}
+
+.photo-mode-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 1000;
+  background: var(--cream);
+  padding: 8px 16px;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+}
+
 @media (max-width: 600px) {
   .slot {
     width: 40px;

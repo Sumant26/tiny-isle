@@ -64,6 +64,21 @@ export class PlayerView implements Mover {
     this.cat.position.y = origY;
   }
 
+  /** Plays an energetic fishing catch celebration jump on the farmer. */
+  async catchFishReact(): Promise<void> {
+    const root = this.farmer.root;
+    const origY = root.position.y;
+    await this.ctx.tweener.tween({
+      duration: 0.6,
+      ease: easings.outBack,
+      onUpdate: (k) => {
+        root.position.y = origY + Math.sin(k * Math.PI) * 0.45;
+        root.rotation.y += 0.15;
+      },
+    }).promise;
+    root.position.y = origY;
+  }
+
   /** Per-frame idle bob and cat follow. Exposed for tests. */
   tick(dt: number): void {
     this.bobTime += dt;

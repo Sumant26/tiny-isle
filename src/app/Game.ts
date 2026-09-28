@@ -237,6 +237,9 @@ export const createGame = ({
   const offSound = store.onEvent((e) => {
     const name = soundForEvent(e);
     if (name) sound.play(name);
+    if (e.type === 'fish-caught') {
+      void renderer.player.catchFishReact();
+    }
   });
 
   const unlockAudio = (): void => sound.unlock();

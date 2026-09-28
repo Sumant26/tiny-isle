@@ -122,6 +122,7 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
     case 'plot-expanded':
       return 'expand';
     case 'cooked':
+    case 'cottage-activity':
       return 'cook';
     case 'fish-caught':
       return 'fish_catch';

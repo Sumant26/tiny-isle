@@ -11,6 +11,8 @@ import { createSettingsPanel } from './SettingsPanel';
 import { createShopPanel } from './ShopPanel';
 import { createToasts } from './Toasts';
 import { createVisitorCard } from './VisitorCard';
+import { CookDialog } from './CookDialog';
+import { FishDialog } from './FishDialog';
 
 const storeWith = (s = makeState()) => createStore({ reducer, initialState: s });
 const q = (root: HTMLElement, id: string) =>
@@ -290,5 +292,63 @@ describe('SettingsPanel crash reports', () => {
     toggle.dispatchEvent(new Event('change'));
     expect(onChange).toHaveBeenCalledWith(false);
     expect(panel.el.textContent).toContain('No saves or personal data');
+  });
+});
+
+describe('CookDialog (Cottage House Hub)', () => {
+  it('renders cottage tabs and allows cooking, hearth, reading, cleaning, and tea', () => {
+    const store = storeWith(withProduce(makeState({ bloom: 10 }), 'carrot', 5));
+    const onSleep = vi.fn();
+    const onClose = vi.fn();
+    const dialog = new CookDialog(store, onClose, onSleep);
+    dialog.show();
+    expect(dialog.isOpen).toBe(true);
+
+    // Cook soup
+    const cookBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="cook-carrot_soup"]',
+    );
+    expect(cookBtn).not.toBeNull();
+    expect(cookBtn?.disabled).toBe(false);
+    cookBtn?.click();
+    expect(store.getState().inventory.produce.carrot).toBe(3);
+
+    // Switch to fireplace tab
+    const hearthTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="hearth"]');
+    hearthTab?.click();
+    const fireBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="kindle-fire"]');
+    fireBtn?.click();
+    expect(store.getState().journal).toContain('Lit a cozy crackling fire in the cottage hearth.');
+
+    // Switch to bed tab
+    const bedTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="bed"]');
+    bedTab?.click();
+    const sleepBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="cottage-sleep"]');
+    sleepBtn?.click();
+    expect(onSleep).toHaveBeenCalledTimes(1);
+
+    dialog.hide();
+    expect(dialog.isOpen).toBe(false);
+  });
+});
+
+describe('FishDialog', () => {
+  it('opens, starts cast, catches fish on click, and closes', () => {
+    const store = storeWith();
+    const onClose = vi.fn();
+    const dialog = new FishDialog(store, onClose);
+    dialog.show();
+    expect(dialog.isOpen).toBe(true);
+
+    const castBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="fish-cast"]');
+    expect(castBtn).not.toBeNull();
+    castBtn?.click();
+
+    // Catch in zone
+    castBtn?.click();
+    expect(store.getState().stats.fishCaught).toBe(1);
+
+    dialog.hide();
+    expect(dialog.isOpen).toBe(false);
   });
 });

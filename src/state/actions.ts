@@ -26,6 +26,10 @@ export type Action =
   | { readonly type: 'shop/buyDecoration'; readonly decoration: DecorationId }
   | { readonly type: 'shop/expandPlot' }
   | { readonly type: 'cottage/cook'; readonly recipe: RecipeId }
+  | {
+      readonly type: 'cottage/activity';
+      readonly activity: 'kindle_fire' | 'clean_cottage' | 'read_book' | 'brew_tea';
+    }
   | { readonly type: 'pond/fish' }
   | { readonly type: 'cat/pet' }
   | { readonly type: 'visitor/fulfill' }
@@ -48,6 +52,9 @@ export const actions = {
   buyDecoration: (decoration: DecorationId): Action => ({ type: 'shop/buyDecoration', decoration }),
   expandPlot: (): Action => ({ type: 'shop/expandPlot' }),
   cook: (recipe: RecipeId): Action => ({ type: 'cottage/cook', recipe }),
+  cottageActivity: (
+    activity: 'kindle_fire' | 'clean_cottage' | 'read_book' | 'brew_tea',
+  ): Action => ({ type: 'cottage/activity', activity }),
   fish: (): Action => ({ type: 'pond/fish' }),
   petCat: (): Action => ({ type: 'cat/pet' }),
   fulfillVisitor: (): Action => ({ type: 'visitor/fulfill' }),

@@ -151,6 +151,10 @@ export type GameEvent =
   | { readonly type: 'crop-unlocked'; readonly crop: CropId }
   | { readonly type: 'cooked'; readonly recipe: RecipeId }
   | { readonly type: 'fish-caught'; readonly fish: FishId }
+  | {
+      readonly type: 'cottage-activity';
+      readonly activity: 'kindle_fire' | 'clean_cottage' | 'read_book' | 'brew_tea';
+    }
   | { readonly type: 'pet-cat'; readonly happiness: number }
   | { readonly type: 'achievement-unlocked'; readonly achievement: string }
   | { readonly type: 'journal-entry'; readonly entry: string }

@@ -548,6 +548,108 @@ dialog::backdrop {
   font-weight: 600;
 }
 
+/* Cottage House & Activities */
+.dialog-cottage {
+  width: min(94vw, 460px);
+  max-height: 85vh;
+}
+
+.cottage-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.cottage-tab-btn {
+  background: var(--cream-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cottage-tab-btn:hover {
+  background: var(--accent-soft);
+}
+
+.cottage-tab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.cottage-body {
+  min-height: 220px;
+}
+
+.cottage-view {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.hearth-card,
+.bed-card,
+.book-card,
+.tidy-card,
+.tea-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  background: var(--cream-2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  gap: 10px;
+}
+
+.hearth-card.burning {
+  background: linear-gradient(180deg, #fff3e0 0%, #ffe0b2 100%);
+  border-color: #ffb74d;
+  box-shadow: 0 4px 14px rgba(255, 152, 0, 0.2);
+}
+
+.hearth-flame,
+.bed-icon,
+.book-icon,
+.tidy-icon,
+.tea-icon {
+  font-size: 36px;
+}
+
+.hearth-card.burning .hearth-flame {
+  animation: flicker 1s infinite alternate ease-in-out;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.15) rotate(3deg);
+  }
+}
+
+.book-content {
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.6;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.book-content p {
+  margin: 4px 0;
+}
+
 /* Cooking */
 .recipe-list {
   display: flex;

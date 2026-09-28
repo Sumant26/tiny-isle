@@ -117,7 +117,7 @@ export class FishDialog {
   }
 
   private startBarAnimation(): void {
-    this.pos = 10;
+    this.pos = 50;
     this.dir = 1;
     const animate = () => {
       // Gentle, calm speed
@@ -166,13 +166,27 @@ export class FishDialog {
     this.sweetSpot.classList.remove('active');
     this.marker.classList.remove('in-zone');
     const dlg = this.root as HTMLDialogElement;
-    if (typeof dlg.showModal === 'function') dlg.showModal();
+    dlg.open = true;
+    if (typeof dlg.showModal === 'function') {
+      try {
+        dlg.showModal();
+      } catch {
+        // jsdom fallback
+      }
+    }
   }
 
   hide(): void {
     this.stop();
     const dlg = this.root as HTMLDialogElement;
-    if (typeof dlg.close === 'function') dlg.close();
+    dlg.open = false;
+    if (typeof dlg.close === 'function') {
+      try {
+        dlg.close();
+      } catch {
+        // jsdom fallback
+      }
+    }
   }
 
   get isOpen(): boolean {

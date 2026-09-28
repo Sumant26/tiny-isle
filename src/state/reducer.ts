@@ -1,6 +1,7 @@
 import { checkAchievements } from '../core/rules/achievements';
 import { petCat } from '../core/rules/cat';
 import { cook } from '../core/rules/cooking';
+import { cottageActivity } from '../core/rules/cottage';
 import { sleep } from '../core/rules/day';
 import { buyDecoration, buySeeds, sell, sellAll } from '../core/rules/economy';
 import { expandPlot } from '../core/rules/expansion';
@@ -40,6 +41,8 @@ export const reducer = (state: GameState, action: Action): Outcome => {
         return expandPlot(state);
       case 'cottage/cook':
         return cook(state, action.recipe);
+      case 'cottage/activity':
+        return cottageActivity(state, action.activity);
       case 'pond/fish':
         return fish(state);
       case 'cat/pet':

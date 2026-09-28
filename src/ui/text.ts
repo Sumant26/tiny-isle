@@ -59,6 +59,8 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
       return { text: `Cooked ${e.recipe.replace('_', ' ')}! 🍲`, tone: 'good' };
     case 'fish-caught':
       return { text: `Caught a ${e.fish}! 🎣`, tone: 'good' };
+    case 'cottage-activity':
+      return { text: 'Cozy cottage moment! ✨', tone: 'good' };
     case 'pet-cat':
       return { text: 'Purr... The cat feels loved! 🐱❤️', tone: 'good' };
     case 'achievement-unlocked':

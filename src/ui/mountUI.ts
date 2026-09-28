@@ -47,7 +47,7 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
   const settings = createSettingsPanel(store, handlers);
   const help = createHelpPanel(handlers.onHelpDismissed);
   const journal = new JournalDialog(store, () => journal.hide());
-  const cook = new CookDialog(store, () => cook.hide());
+  const cook = new CookDialog(store, () => cook.hide(), handlers.onSleep);
   const fish = new FishDialog(store, () => fish.hide());
   const photo = new PhotoMode(root, handlers.canvas ?? null, () => undefined);
 

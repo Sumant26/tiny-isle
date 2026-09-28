@@ -80,12 +80,26 @@ export class JournalDialog {
     });
 
     const dlg = this.root as HTMLDialogElement;
-    if (typeof dlg.showModal === 'function') dlg.showModal();
+    dlg.open = true;
+    if (typeof dlg.showModal === 'function') {
+      try {
+        dlg.showModal();
+      } catch {
+        // jsdom fallback
+      }
+    }
   }
 
   hide(): void {
     const dlg = this.root as HTMLDialogElement;
-    if (typeof dlg.close === 'function') dlg.close();
+    dlg.open = false;
+    if (typeof dlg.close === 'function') {
+      try {
+        dlg.close();
+      } catch {
+        // jsdom fallback
+      }
+    }
   }
 
   get isOpen(): boolean {

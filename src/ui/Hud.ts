@@ -100,7 +100,8 @@ export const createHud = (store: Store, handlers: HudHandlers): Component => {
       (s) => ({ day: s.day, season: s.season ?? 'spring' }),
       ({ day: d, season: sea }) => {
         day.textContent = String(d);
-        const icon = sea === 'spring' ? '🌸' : sea === 'summer' ? '🌻' : '🍂';
+        const icon =
+          sea === 'spring' ? '🌸' : sea === 'summer' ? '🌻' : sea === 'autumn' ? '🍂' : '❄️';
         const name = sea.charAt(0).toUpperCase() + sea.slice(1);
         season.textContent = `${icon} ${name}`;
       },

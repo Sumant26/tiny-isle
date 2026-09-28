@@ -16,12 +16,18 @@ describe('cottageActivity', () => {
     );
   });
 
-  it('adds bloom and records in journal when cleaning the cottage', () => {
+  it('adds bloom and records in journal when sitting by the hearth or taking a nap', () => {
     const s = makeState({ bloom: 10 });
-    const r = cottageActivity(s, 'clean_cottage');
-    expect(r.state.bloom).toBe(14);
-    expect(r.state.journal).toContain(
-      'Swept the floor and polished the rustic table sparkling clean.',
+    const r1 = cottageActivity(s, 'sit_hearth');
+    expect(r1.state.bloom).toBe(12);
+    expect(r1.state.journal).toContain(
+      'Sat comfortably by the fireplace hearth enjoying the crackling flames.',
+    );
+
+    const r2 = cottageActivity(s, 'take_nap');
+    expect(r2.state.bloom).toBe(12);
+    expect(r2.state.journal).toContain(
+      'Rested for a cozy afternoon nap under the quilted bedsheets.',
     );
   });
 });

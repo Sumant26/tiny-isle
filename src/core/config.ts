@@ -175,14 +175,32 @@ export const RECIPES: Readonly<Record<RecipeId, RecipeDef>> = {
     bloomPoints: 6,
     description: 'A colorful tossed salad with sunflower seeds.',
   },
+  grilled_fish: {
+    id: 'grilled_fish',
+    name: 'Charbroiled Pond Fish',
+    ingredients: { carrot: 1 },
+    sellPrice: 35,
+    bloomPoints: 5,
+    description: 'Fresh pond fish seasoned with herbs and garden carrots.',
+  },
+  fish_stew: {
+    id: 'fish_stew',
+    name: 'Hearty Island Bouillabaisse',
+    ingredients: { tomato: 2, carrot: 1 },
+    sellPrice: 65,
+    bloomPoints: 9,
+    description: 'A rich, savory seafood stew packed with pond catch and tomatoes.',
+  },
 };
 
 export const RECIPE_IDS: readonly RecipeId[] = [
   'carrot_soup',
   'tomato_pasta',
   'berry_jam',
-  'pumpkin_pie',
+  'grilled_fish',
   'salad',
+  'pumpkin_pie',
+  'fish_stew',
 ];
 
 export interface FishDef {

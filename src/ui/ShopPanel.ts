@@ -1,4 +1,4 @@
-import { CROP_IDS, CROPS, DECORATION_IDS, DECORATIONS } from '../core/config';
+import { CROP_IDS, CROPS, DECORATION_IDS, DECORATIONS, FISH, FISH_IDS } from '../core/config';
 import type { GameState } from '../core/types';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
@@ -136,16 +136,28 @@ export const createShopPanel = (store: Store): ShopPanel => {
   };
 
   const renderSell = (s: GameState): HTMLElement[] => {
-    const rows = CROP_IDS.filter((c) => s.inventory.produce[c] > 0).map((c) =>
+    const cropRows = CROP_IDS.filter((c) => s.inventory.produce[c] > 0).map((c) =>
       row(
         `${CROP_ICONS[c]} ${CROPS[c].name} × ${s.inventory.produce[c]}`,
         `${CROPS[c].sellPrice} coins each`,
         btn('Sell 1', () => store.dispatch(actions.sell(c, 1)), false, `sell-${c}-1`),
       ),
     );
+    const fishRows = FISH_IDS.filter((f) => (s.fishInventory?.[f] ?? 0) > 0).map((f) =>
+      row(
+        `🐟 ${FISH[f].name} × ${s.fishInventory?.[f]}`,
+        `${FISH[f].sellPrice} coins each`,
+        btn('Sell 1', () => store.dispatch(actions.sellFish(f, 1)), false, `sell-fish-${f}-1`),
+      ),
+    );
+    const rows = [...cropRows, ...fishRows];
     if (!rows.length)
       return [
-        h('p', { class: 'empty' }, 'Nothing to sell yet. Harvest ripe crops with the basket.'),
+        h(
+          'p',
+          { class: 'empty' },
+          'Nothing to sell yet. Harvest crops or catch fish from the pond!',
+        ),
       ];
     return [
       ...rows,

@@ -6,8 +6,8 @@ import { chain, ok } from './outcome';
 import { maybeVisitorArrives } from './visitors';
 
 export const getSeasonForDay = (day: number): Season => {
-  const s = Math.floor((day - 1) / SEASON_LENGTH) % 3;
-  return s === 0 ? 'spring' : s === 1 ? 'summer' : 'autumn';
+  const s = Math.floor((day - 1) / SEASON_LENGTH) % 4;
+  return s === 0 ? 'spring' : s === 1 ? 'summer' : s === 2 ? 'autumn' : 'winter';
 };
 
 /** Overnight: watered crops grow one step, then all soil dries out. */

@@ -1,9 +1,9 @@
 import { checkAchievements } from '../core/rules/achievements';
 import { petCat } from '../core/rules/cat';
-import { cook } from '../core/rules/cooking';
+import { cook, eatFish, eatMeal } from '../core/rules/cooking';
 import { cottageActivity } from '../core/rules/cottage';
 import { sleep } from '../core/rules/day';
-import { buyDecoration, buySeeds, sell, sellAll } from '../core/rules/economy';
+import { buyDecoration, buySeeds, sell, sellAll, sellFish } from '../core/rules/economy';
 import { expandPlot } from '../core/rules/expansion';
 import { useTool } from '../core/rules/farming';
 import { fish } from '../core/rules/fishing';
@@ -31,6 +31,8 @@ export const reducer = (state: GameState, action: Action): Outcome => {
         return sleep(state);
       case 'market/sell':
         return sell(state, action.crop, action.quantity);
+      case 'market/sellFish':
+        return sellFish(state, action.fish, action.quantity);
       case 'market/sellAll':
         return sellAll(state);
       case 'shop/buySeeds':
@@ -41,10 +43,14 @@ export const reducer = (state: GameState, action: Action): Outcome => {
         return expandPlot(state);
       case 'cottage/cook':
         return cook(state, action.recipe);
+      case 'cottage/eat':
+        return eatMeal(state, action.recipe);
       case 'cottage/activity':
         return cottageActivity(state, action.activity);
       case 'pond/fish':
         return fish(state);
+      case 'pond/eatFish':
+        return eatFish(state, action.fish);
       case 'cat/pet':
         return petCat(state);
       case 'visitor/fulfill':

@@ -32,6 +32,7 @@ export const attachPicker = (
       const cell = pickCurrentCell();
       if (cell) {
         currentTargetCell = cell;
+        h.onTap(cell);
         const now = Date.now();
         if (now - lastTapTime < 300) {
           h.onDoubleTap?.(cell);
@@ -42,7 +43,7 @@ export const attachPicker = (
         if (isPointerDown && currentTargetCell) {
           h.onTap(currentTargetCell);
         }
-      }, 300);
+      }, 150);
     } else if (info.type === PointerEventTypes.POINTERUP) {
       isPointerDown = false;
       currentTargetCell = null;
@@ -52,11 +53,14 @@ export const attachPicker = (
       }
     } else if (info.type === PointerEventTypes.POINTERTAP) {
       const cell = pickCurrentCell();
-      if (cell) h.onTap(cell);
+      if (cell && !isPointerDown) h.onTap(cell);
     } else if (info.type === PointerEventTypes.POINTERMOVE) {
       const cell = pickCurrentCell();
       if (isPointerDown && cell) {
-        currentTargetCell = cell;
+        if (cell.x !== currentTargetCell?.x || cell.z !== currentTargetCell.z) {
+          currentTargetCell = cell;
+          h.onTap(cell);
+        }
       }
       h.onHover?.(cell);
     }

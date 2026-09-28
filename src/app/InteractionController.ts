@@ -89,7 +89,7 @@ export class InteractionController {
     }
 
     // Pet the cat if clicked near player / cat
-    if (Math.hypot(cell.x - player.x, cell.z - player.z) <= 1.5 && Math.random() < 0.2) {
+    if (Math.hypot(cell.x - player.x, cell.z - player.z) <= 1.8) {
       this.deps.onPetCat?.();
     }
 

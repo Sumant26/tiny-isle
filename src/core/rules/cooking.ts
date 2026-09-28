@@ -1,5 +1,5 @@
 import { RECIPES } from '../config';
-import type { CropId, GameState, Outcome, RecipeId } from '../types';
+import type { CropId, FishId, GameState, Outcome, RecipeId } from '../types';
 import { addCount, chain, ok, reject } from './outcome';
 import { addBloom } from './progression';
 
@@ -52,5 +52,32 @@ export const cook = (state: GameState, recipeId: RecipeId): Outcome => {
       { type: 'journal-entry', entry: journalEntry },
     ),
     (s) => addBloom(s, recipe.bloomPoints),
+  );
+};
+
+export const eatMeal = (state: GameState, recipeId: RecipeId): Outcome => {
+  const current = state.cookedInventory?.[recipeId] ?? 0;
+  if (current <= 0) return reject(state, 'no-meal-to-eat');
+  const recipe = RECIPES[recipeId];
+  const nextCooked = {
+    ...state.cookedInventory,
+    [recipeId]: current - 1,
+  };
+  return chain(
+    ok({ ...state, cookedInventory: nextCooked }, { type: 'meal-eaten', recipe: recipeId }),
+    (s) => addBloom(s, Math.max(2, Math.floor(recipe.bloomPoints / 2))),
+  );
+};
+
+export const eatFish = (state: GameState, fishId: FishId): Outcome => {
+  const current = state.fishInventory?.[fishId] ?? 0;
+  if (current <= 0) return reject(state, 'no-fish-to-eat');
+  const nextFish = {
+    ...state.fishInventory,
+    [fishId]: current - 1,
+  };
+  return chain(
+    ok({ ...state, fishInventory: nextFish }, { type: 'fish-eaten', fish: fishId }),
+    (s) => addBloom(s, 2),
   );
 };

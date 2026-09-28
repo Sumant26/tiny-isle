@@ -87,6 +87,9 @@ export const createGame = ({
     });
   const renderer = createGameRenderer(ctx, store, { canvas, random });
 
+  let dayCycleTimer = 0;
+  const DAY_CYCLE_PERIOD = 120;
+
   let sleeping = false;
   const sleep = async (): Promise<void> => {
     if (sleeping) return;
@@ -101,6 +104,7 @@ export const createGame = ({
       await ctx.tweener.wait(0.8);
       await ui.dayOverlay.cover(`Day ${store.getState().day + 1}`);
       store.dispatch(actions.sleep());
+      dayCycleTimer = 0;
       sound.setAmbience(store.getState().weather, 'day');
       renderer.lighting.set('day');
       await ui.dayOverlay.reveal();
@@ -112,6 +116,7 @@ export const createGame = ({
   const newGame = (s?: number): void => {
     controller.cancel();
     saves.clear();
+    dayCycleTimer = 0;
     store.dispatch(actions.load(createInitialState(s)));
     renderer.lighting.set('day');
   };
@@ -271,6 +276,22 @@ export const createGame = ({
   uiRoot.ownerDocument.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('pagehide', flush);
 
+  const dayCycleObserver = !frozenTime
+    ? ctx.scene.onBeforeRenderObservable.add(() => {
+        if (sleeping) return;
+        const dt = ctx.frameDelta();
+        dayCycleTimer += dt;
+        const progress = (dayCycleTimer % DAY_CYCLE_PERIOD) / DAY_CYCLE_PERIOD;
+        const duskBlend = Math.max(0, Math.sin(progress * Math.PI * 2 - Math.PI / 2));
+        renderer.lighting.apply(duskBlend);
+        if (duskBlend > 0.5 && renderer.lighting.timeOfDay !== 'dusk') {
+          sound.setAmbience(store.getState().weather, 'dusk');
+        } else if (duskBlend <= 0.3 && renderer.lighting.timeOfDay === 'dusk') {
+          sound.setAmbience(store.getState().weather, 'day');
+        }
+      })
+    : null;
+
   if (storage.getItem(HELP_SEEN_KEY) !== '1') ui.help.show();
 
   return {
@@ -286,6 +307,7 @@ export const createGame = ({
     newGame,
     dispose: () => {
       flush();
+      if (dayCycleObserver) ctx.scene.onBeforeRenderObservable.remove(dayCycleObserver);
       offKeys();
       offGamepad();
       offSave();

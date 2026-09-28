@@ -33,6 +33,8 @@ export const REJECT_MESSAGES: Record<RejectReason, string> = {
   'already-owned': 'You already have one of those.',
   'max-size': 'Garden is already at maximum size.',
   'no-visitor': 'Nobody is visiting right now.',
+  'no-meal-to-eat': 'No cooked meals ready to eat.',
+  'no-fish-to-eat': 'No fresh fish in inventory.',
   blocked: "You can't walk there.",
   'out-of-bounds': 'That spot is outside the garden.',
 };
@@ -57,8 +59,12 @@ export const messageForEvent = (e: GameEvent): { text: string; tone: Tone } | nu
       return { text: `Garden expanded! Now ${e.newHeight} rows.`, tone: 'good' };
     case 'cooked':
       return { text: `Cooked ${e.recipe.replace('_', ' ')}! 🍲`, tone: 'good' };
+    case 'meal-eaten':
+      return { text: `Ate delicious ${e.recipe.replace('_', ' ')}! 😋 (+Bloom)`, tone: 'good' };
     case 'fish-caught':
       return { text: `Caught a ${e.fish}! 🎣`, tone: 'good' };
+    case 'fish-eaten':
+      return { text: `Ate fresh ${e.fish}! 🐟 (+2 Bloom)`, tone: 'good' };
     case 'cottage-activity':
       return { text: 'Cozy cottage moment! ✨', tone: 'good' };
     case 'pet-cat':

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from '../config';
 import { makeState, seedWhereFirstRoll, withTile } from '../../test/fixtures';
-import { growOvernight, sleep } from './day';
+import { growOvernight, sleep, getSeasonForDay } from './day';
 
 const clearSeed = seedWhereFirstRoll((v) => v >= BALANCE.rainChance);
 const rainSeed = seedWhereFirstRoll((v) => v < BALANCE.rainChance);
@@ -62,5 +62,13 @@ describe('sleep', () => {
   it('is deterministic for the same state', () => {
     const s = makeState({ rngSeed: 777 });
     expect(sleep(s)).toEqual(sleep(s));
+  });
+
+  it('cycles across 4 seasons (spring, summer, autumn, winter)', () => {
+    expect(getSeasonForDay(1)).toBe('spring');
+    expect(getSeasonForDay(11)).toBe('summer');
+    expect(getSeasonForDay(21)).toBe('autumn');
+    expect(getSeasonForDay(31)).toBe('winter');
+    expect(getSeasonForDay(41)).toBe('spring');
   });
 });

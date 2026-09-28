@@ -1,4 +1,4 @@
-import { RECIPE_IDS, RECIPES } from '../core/config';
+import { FISH_IDS, RECIPE_IDS, RECIPES } from '../core/config';
 import type { CropId } from '../core/types';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
@@ -92,6 +92,7 @@ export class CookDialog {
     const s = this.store.getState();
     const list = h('div', { class: 'recipe-list' });
 
+    // Section 1: Cook new dishes
     RECIPE_IDS.forEach((id) => {
       const recipe = RECIPES[id];
       let canCook = true;
@@ -134,16 +135,89 @@ export class CookDialog {
       list.appendChild(card);
     });
 
+    // Section 2: Eat Prepared Dishes & Fish
+    const eatList = h('div', { class: 'eat-list' });
+
+    RECIPE_IDS.forEach((id) => {
+      const count = s.cookedInventory?.[id] ?? 0;
+      if (count > 0) {
+        const recipe = RECIPES[id];
+        const eatBtn = h(
+          'button',
+          { class: 'primary-btn eat-btn', 'data-testid': `eat-${id}` },
+          'Eat 🍴',
+        );
+        eatBtn.addEventListener('click', () => {
+          this.store.dispatch(actions.eatMeal(id));
+          this.renderCurrentTab();
+        });
+        eatList.appendChild(
+          h(
+            'div',
+            { class: 'recipe-card' },
+            h(
+              'div',
+              { class: 'recipe-info' },
+              h('strong', {}, `${recipe.name} × ${count}`),
+              h('p', { class: 'recipe-desc' }, 'Ready to eat for bloom & energy.'),
+            ),
+            eatBtn,
+          ),
+        );
+      }
+    });
+
+    FISH_IDS.forEach((f) => {
+      const count = s.fishInventory?.[f] ?? 0;
+      if (count > 0) {
+        const eatBtn = h(
+          'button',
+          { class: 'primary-btn eat-btn', 'data-testid': `eat-fish-${f}` },
+          'Eat 🐟',
+        );
+        eatBtn.addEventListener('click', () => {
+          this.store.dispatch(actions.eatFish(f));
+          this.renderCurrentTab();
+        });
+        eatList.appendChild(
+          h(
+            'div',
+            { class: 'recipe-card' },
+            h(
+              'div',
+              { class: 'recipe-info' },
+              h('strong', {}, `Fresh ${f.charAt(0).toUpperCase() + f.slice(1)} × ${count}`),
+              h('p', { class: 'recipe-desc' }, 'Pond catch ready to enjoy (+2 Bloom).'),
+            ),
+            eatBtn,
+          ),
+        );
+      }
+    });
+
+    if (!eatList.hasChildNodes()) {
+      eatList.appendChild(
+        h(
+          'p',
+          { class: 'empty' },
+          'No prepared meals or fresh fish ready to eat. Cook a recipe above or catch fish from the pond!',
+        ),
+      );
+    }
+
     this.bodyEl.appendChild(
       h(
         'div',
         { class: 'cottage-view' },
+        h('h3', {}, '🍳 Cook Dishes'),
         h(
           'p',
           { class: 'dialog-desc' },
-          'Turn your fresh garden harvests into hearty, nourishing recipes.',
+          'Turn fresh garden harvests into hearty, nourishing recipes.',
         ),
         list,
+        h('h3', {}, '🍴 Dine & Eat Food'),
+        eatList,
       ),
     );
   }
@@ -162,27 +236,38 @@ export class CookDialog {
           : 'Stack fresh birch logs and kindle a comforting fire to warm up the room.',
       ),
       h(
-        'button',
-        { class: 'primary-btn hearth-btn', 'data-testid': 'kindle-fire' },
-        this.fireLit ? 'Tender the Fire ✨' : 'Light Fireplace 🔥',
+        'div',
+        { class: 'hearth-actions' },
+        h(
+          'button',
+          { class: 'primary-btn hearth-btn', 'data-testid': 'kindle-fire' },
+          this.fireLit ? 'Tender the Fire ✨' : 'Light Fireplace 🔥',
+        ),
+        h(
+          'button',
+          { class: 'primary-btn sit-btn', 'data-testid': 'sit-hearth' },
+          'Sit by Fireplace 🪑',
+        ),
       ),
     );
 
-    fireCard.querySelector('button')?.addEventListener('click', () => {
+    fireCard.querySelector('[data-testid="kindle-fire"]')?.addEventListener('click', () => {
       this.fireLit = true;
       this.store.dispatch(actions.cottageActivity('kindle_fire'));
       this.renderCurrentTab();
+    });
+
+    fireCard.querySelector('[data-testid="sit-hearth"]')?.addEventListener('click', () => {
+      this.store.dispatch(actions.cottageActivity('sit_hearth'));
+      const btn = fireCard.querySelector<HTMLButtonElement>('[data-testid="sit-hearth"]');
+      if (btn) btn.textContent = 'Sitting Cozy by Fireplace ☕';
     });
 
     this.bodyEl.appendChild(
       h(
         'div',
         { class: 'cottage-view' },
-        h(
-          'p',
-          { class: 'dialog-desc' },
-          'The heart of your cottage: a stone fireplace for cozy evenings.',
-        ),
+        h('p', { class: 'dialog-desc' }, 'Relax by the stone hearth and watch glowing embers.'),
         fireCard,
       ),
     );
@@ -200,15 +285,30 @@ export class CookDialog {
         'A soft feathered bed with handmade floral quilts. Rest here to end the day and wake up refreshed to a new morning.',
       ),
       h(
-        'button',
-        { class: 'primary-btn sleep-bed-btn', 'data-testid': 'cottage-sleep' },
-        'Rest & Sleep for the Night 🌙',
+        'div',
+        { class: 'bed-actions' },
+        h(
+          'button',
+          { class: 'primary-btn sleep-bed-btn', 'data-testid': 'cottage-sleep' },
+          'Rest & Sleep for the Night 🌙',
+        ),
+        h(
+          'button',
+          { class: 'primary-btn nap-btn', 'data-testid': 'cottage-nap' },
+          'Afternoon Nap 😴 (+2 Bloom)',
+        ),
       ),
     );
 
-    bedCard.querySelector('button')?.addEventListener('click', () => {
+    bedCard.querySelector('[data-testid="cottage-sleep"]')?.addEventListener('click', () => {
       this.hide();
       this.onSleep?.();
+    });
+
+    bedCard.querySelector('[data-testid="cottage-nap"]')?.addEventListener('click', () => {
+      this.store.dispatch(actions.cottageActivity('take_nap'));
+      const btn = bedCard.querySelector<HTMLButtonElement>('[data-testid="cottage-nap"]');
+      if (btn) btn.textContent = 'Woke up Refreshed from Nap! ✨';
     });
 
     this.bodyEl.appendChild(
@@ -315,16 +415,31 @@ export class CookDialog {
         'Sit at the carved oak table and brew a soothing pot of garden chamomile and mint tea.',
       ),
       h(
-        'button',
-        { class: 'primary-btn tea-btn', 'data-testid': 'brew-tea' },
-        'Brew Herbal Tea 🍵',
+        'div',
+        { class: 'tea-actions' },
+        h(
+          'button',
+          { class: 'primary-btn tea-btn', 'data-testid': 'brew-tea' },
+          'Brew Herbal Tea 🍵',
+        ),
+        h(
+          'button',
+          { class: 'primary-btn sit-table-btn', 'data-testid': 'sit-table' },
+          'Sit at Table 🪑',
+        ),
       ),
     );
 
-    teaCard.querySelector('button')?.addEventListener('click', () => {
+    teaCard.querySelector('[data-testid="brew-tea"]')?.addEventListener('click', () => {
       this.store.dispatch(actions.cottageActivity('brew_tea'));
-      const btn = teaCard.querySelector('button');
+      const btn = teaCard.querySelector<HTMLButtonElement>('[data-testid="brew-tea"]');
       if (btn) btn.textContent = 'Enjoying Warm Chamomile Tea 🫖 (+2 Bloom)';
+    });
+
+    teaCard.querySelector('[data-testid="sit-table"]')?.addEventListener('click', () => {
+      this.store.dispatch(actions.cottageActivity('sit_table'));
+      const btn = teaCard.querySelector<HTMLButtonElement>('[data-testid="sit-table"]');
+      if (btn) btn.textContent = 'Sitting at Oak Dining Table 🪑';
     });
 
     this.bodyEl.appendChild(

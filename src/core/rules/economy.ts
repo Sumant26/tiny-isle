@@ -1,5 +1,5 @@
-import { CROP_IDS, CROPS, DECORATIONS } from '../config';
-import type { CropId, DecorationId, GameEvent, GameState, Outcome } from '../types';
+import { CROP_IDS, CROPS, DECORATIONS, FISH, FISH_IDS } from '../config';
+import type { CropId, DecorationId, FishId, GameEvent, GameState, Outcome } from '../types';
 import { addCount, chain, ok, reject } from './outcome';
 import { addBloom } from './progression';
 
@@ -24,6 +24,26 @@ export const sell = (state: GameState, crop: CropId, quantity: number): Outcome 
   );
 };
 
+export const sellFish = (state: GameState, fish: FishId, quantity: number): Outcome => {
+  const current = state.fishInventory?.[fish] ?? 0;
+  if (!isPositiveInt(quantity) || current < quantity) {
+    return reject(state, 'not-enough-produce');
+  }
+  const coins = FISH[fish].sellPrice * quantity;
+  return ok(
+    {
+      ...state,
+      coins: state.coins + coins,
+      fishInventory: {
+        ...state.fishInventory,
+        [fish]: current - quantity,
+      },
+      stats: { ...state.stats, earned: state.stats.earned + coins },
+    },
+    { type: 'sold', crop: 'carrot', quantity, coins },
+  );
+};
+
 export const sellAll = (state: GameState): Outcome => {
   const events: GameEvent[] = [];
   let next = state;
@@ -31,6 +51,14 @@ export const sellAll = (state: GameState): Outcome => {
     const qty = next.inventory.produce[crop];
     if (qty > 0) {
       const r = sell(next, crop, qty);
+      next = r.state;
+      events.push(...r.events);
+    }
+  }
+  for (const f of FISH_IDS) {
+    const qty = next.fishInventory?.[f] ?? 0;
+    if (qty > 0) {
+      const r = sellFish(next, f, qty);
       next = r.state;
       events.push(...r.events);
     }

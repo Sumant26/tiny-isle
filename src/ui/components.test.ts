@@ -313,9 +313,21 @@ describe('CookDialog (Cottage House Hub)', () => {
     cookBtn?.click();
     expect(store.getState().inventory.produce.carrot).toBe(3);
 
-    // Switch to fireplace tab
+    // Eat cooked meal
+    const eatBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="eat-carrot_soup"]');
+    expect(eatBtn).not.toBeNull();
+    eatBtn?.click();
+    expect(store.getState().cookedInventory?.carrot_soup).toBe(0);
+
+    // Switch to fireplace tab and sit
     const hearthTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="hearth"]');
     hearthTab?.click();
+    const sitBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="sit-hearth"]');
+    sitBtn?.click();
+    expect(store.getState().journal).toContain(
+      'Sat comfortably by the fireplace hearth enjoying the crackling flames.',
+    );
+
     const fireBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="kindle-fire"]');
     fireBtn?.click();
     expect(store.getState().journal).toContain('Lit a cozy crackling fire in the cottage hearth.');

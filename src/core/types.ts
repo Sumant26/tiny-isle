@@ -51,8 +51,15 @@ export interface ActiveVisitor {
   readonly arrivedOnDay: number;
 }
 
-export type Season = 'spring' | 'summer' | 'autumn';
-export type RecipeId = 'carrot_soup' | 'berry_jam' | 'pumpkin_pie' | 'salad' | 'tomato_pasta';
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+export type RecipeId =
+  | 'carrot_soup'
+  | 'berry_jam'
+  | 'pumpkin_pie'
+  | 'salad'
+  | 'tomato_pasta'
+  | 'grilled_fish'
+  | 'fish_stew';
 export type FishId = 'koi' | 'goldfish' | 'perch' | 'sparklefish';
 
 export interface Settings {
@@ -117,6 +124,8 @@ export type RejectReason =
   | 'already-owned'
   | 'max-size'
   | 'no-visitor'
+  | 'no-meal-to-eat'
+  | 'no-fish-to-eat'
   | 'blocked'
   | 'out-of-bounds';
 
@@ -150,10 +159,19 @@ export type GameEvent =
   | { readonly type: 'bloom-level-up'; readonly level: number }
   | { readonly type: 'crop-unlocked'; readonly crop: CropId }
   | { readonly type: 'cooked'; readonly recipe: RecipeId }
+  | { readonly type: 'meal-eaten'; readonly recipe: RecipeId }
   | { readonly type: 'fish-caught'; readonly fish: FishId }
+  | { readonly type: 'fish-eaten'; readonly fish: FishId }
   | {
       readonly type: 'cottage-activity';
-      readonly activity: 'kindle_fire' | 'clean_cottage' | 'read_book' | 'brew_tea';
+      readonly activity:
+        | 'kindle_fire'
+        | 'clean_cottage'
+        | 'read_book'
+        | 'brew_tea'
+        | 'sit_hearth'
+        | 'sit_table'
+        | 'take_nap';
     }
   | { readonly type: 'pet-cat'; readonly happiness: number }
   | { readonly type: 'achievement-unlocked'; readonly achievement: string }

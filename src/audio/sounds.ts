@@ -123,6 +123,8 @@ export const soundForEvent = (event: GameEvent): SoundName | null => {
       return 'expand';
     case 'cooked':
     case 'cottage-activity':
+    case 'meal-eaten':
+    case 'fish-eaten':
       return 'cook';
     case 'fish-caught':
       return 'fish_catch';

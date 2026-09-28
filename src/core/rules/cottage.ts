@@ -2,7 +2,14 @@ import type { GameState, Outcome } from '../types';
 import { chain, ok } from './outcome';
 import { addBloom } from './progression';
 
-export type CottageActivity = 'kindle_fire' | 'clean_cottage' | 'read_book' | 'brew_tea';
+export type CottageActivity =
+  | 'kindle_fire'
+  | 'clean_cottage'
+  | 'read_book'
+  | 'brew_tea'
+  | 'sit_hearth'
+  | 'sit_table'
+  | 'take_nap';
 
 const ACTIVITY_DETAILS: Record<CottageActivity, { name: string; bloom: number; journal: string }> =
   {
@@ -25,6 +32,21 @@ const ACTIVITY_DETAILS: Record<CottageActivity, { name: string; bloom: number; j
       name: 'Herbal Tea',
       bloom: 2,
       journal: 'Brewed and enjoyed a warm cup of fragrant chamomile herbal tea.',
+    },
+    sit_hearth: {
+      name: 'Fireplace Hearth',
+      bloom: 2,
+      journal: 'Sat comfortably by the fireplace hearth enjoying the crackling flames.',
+    },
+    sit_table: {
+      name: 'Oak Table',
+      bloom: 2,
+      journal: 'Sat peacefully at the cottage oak table enjoying the quiet breeze.',
+    },
+    take_nap: {
+      name: 'Afternoon Nap',
+      bloom: 2,
+      journal: 'Rested for a cozy afternoon nap under the quilted bedsheets.',
     },
   };
 

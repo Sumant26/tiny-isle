@@ -339,6 +339,104 @@ describe('CookDialog (Cottage House Hub)', () => {
     sleepBtn?.click();
     expect(onSleep).toHaveBeenCalledTimes(1);
 
+    // Orders tab
+    store.dispatch(
+      actions.load({
+        ...store.getState(),
+        farmstandOrders: [
+          {
+            id: 'ord_1',
+            item: 'carrot_soup',
+            itemType: 'recipe',
+            customerName: 'Finn',
+            rewardCoins: 20,
+            rewardBloom: 4,
+          },
+        ],
+        beachBottle: { id: 'b1', letter: 'Ocean note', rewardCoins: 15, read: false },
+        cookedInventory: { carrot_soup: 2 },
+      }),
+    );
+    const ordersTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="orders"]');
+    ordersTab?.click();
+    const readBottleBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="read-bottle"]',
+    );
+    readBottleBtn?.click();
+    expect(store.getState().beachBottle?.read).toBe(true);
+    const serveBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="serve-ord_1"]');
+    serveBtn?.click();
+
+    // Wardrobe tab
+    const wardrobeTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="wardrobe"]');
+    wardrobeTab?.click();
+    const outfitBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="outfit-gardener"]',
+    );
+    outfitBtn?.click();
+    expect(store.getState().currentOutfit).toBe('gardener');
+    const hatBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="hat-flower_crown"]');
+    hatBtn?.click();
+    expect(store.getState().currentHat).toBe('flower_crown');
+    const petAccBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="pet-cat-acc-flower_collar"]',
+    );
+    petAccBtn?.click();
+    expect(store.getState().petAccessories?.cat).toBe('flower_collar');
+
+    // Stargaze tab
+    store.dispatch(
+      actions.load({
+        ...store.getState(),
+        decorations: [...store.getState().decorations, 'wishing_well'],
+        coins: 100,
+      }),
+    );
+    const stargazeTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="stargaze"]');
+    stargazeTab?.click();
+    const starBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="stargaze-btn"]');
+    starBtn?.click();
+    expect(store.getState().stats.starsObserved).toBe(1);
+    const wellBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="toss-well-btn"]');
+    wellBtn?.click();
+    expect(store.getState().stats.wishesMade).toBe(1);
+
+    // Postcards tab
+    const postcardTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="postcards"]');
+    postcardTab?.click();
+    const snapPostcardBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="snap-postcard-btn"]',
+    );
+    snapPostcardBtn?.click();
+    expect(store.getState().postcards?.length).toBe(1);
+
+    // Jukebox tab
+    const jukeboxTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="jukebox"]');
+    jukeboxTab?.click();
+    const playTrackBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="track-lofi_rain"]',
+    );
+    playTrackBtn?.click();
+    expect(store.getState().activeMusicTrack).toBe('lofi_rain');
+
+    // Books tab
+    const booksTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="books"]');
+    booksTab?.click();
+    const readBookBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="read-book"]');
+    readBookBtn?.click();
+
+    // Tea tab
+    const teaTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="tea"]');
+    teaTab?.click();
+    const brewTeaBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="brew-tea"]');
+    brewTeaBtn?.click();
+
+    // Tidy tab
+    const tidyTab = dialog.root.querySelector<HTMLButtonElement>('[data-tab="tidy"]');
+    tidyTab?.click();
+    const tidyBtn = dialog.root.querySelector<HTMLButtonElement>('[data-testid="clean-cottage"]');
+    tidyBtn?.click();
+
     dialog.hide();
     expect(dialog.isOpen).toBe(false);
   });
@@ -362,5 +460,38 @@ describe('FishDialog', () => {
 
     dialog.hide();
     expect(dialog.isOpen).toBe(false);
+  });
+});
+
+describe('JournalDialog and PhotoMode', () => {
+  it('opens journal dialog and handles clicks', async () => {
+    const { JournalDialog } = await import('./JournalDialog');
+    const store = storeWith(
+      makeState({
+        journal: ['Harvested first crop', 'Met Hazel'],
+        achievements: ['first_harvest'],
+      }),
+    );
+    const onClose = vi.fn();
+    const dialog = new JournalDialog(store, onClose);
+    dialog.show();
+    expect(dialog.root.querySelectorAll('.journal-entry').length).toBe(2);
+    expect(dialog.root.querySelectorAll('.achievement-badge').length).toBeGreaterThan(0);
+    dialog.root.querySelector<HTMLButtonElement>('[data-testid="journal-close"]')?.click();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('enters and exits PhotoMode', async () => {
+    const { PhotoMode } = await import('./PhotoMode');
+    const uiRoot = document.createElement('div');
+    const onToggle = vi.fn();
+    const photo = new PhotoMode(uiRoot, null, onToggle);
+    photo.enter();
+    expect(photo.isActive).toBe(true);
+    expect(onToggle).toHaveBeenCalledWith(true);
+    photo.root.querySelector<HTMLButtonElement>('[data-testid="photo-snap"]')?.click();
+    photo.root.querySelector<HTMLButtonElement>('[data-testid="photo-exit"]')?.click();
+    expect(photo.isActive).toBe(false);
+    expect(onToggle).toHaveBeenCalledWith(false);
   });
 });

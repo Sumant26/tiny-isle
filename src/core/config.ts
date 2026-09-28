@@ -239,6 +239,10 @@ export const DECORATIONS: Readonly<Record<DecorationId, DecorationDef>> = {
   birdbath: { id: 'birdbath', name: 'Bird bath', cost: 45, bloomPoints: 6 },
   windchime: { id: 'windchime', name: 'Wind chime', cost: 35, bloomPoints: 4 },
   gnome: { id: 'gnome', name: 'Garden gnome', cost: 60, bloomPoints: 8 },
+  beehive: { id: 'beehive', name: 'Beehive apiary', cost: 75, bloomPoints: 10 },
+  campfire: { id: 'campfire', name: 'Stone campfire', cost: 50, bloomPoints: 8 },
+  picnic_mat: { id: 'picnic_mat', name: 'Meadow picnic spot', cost: 40, bloomPoints: 6 },
+  hammock: { id: 'hammock', name: 'Orchard hammock', cost: 65, bloomPoints: 8 },
 };
 
 export const DECORATION_IDS = Object.keys(DECORATIONS) as DecorationId[];
@@ -374,6 +378,22 @@ export const RECIPES: Readonly<Record<RecipeId, RecipeDef>> = {
     bloomPoints: 9,
     description: 'A rich, savory seafood stew packed with pond catch and tomatoes.',
   },
+  honey_tea: {
+    id: 'honey_tea',
+    name: 'Golden Honey Chamomile Tea',
+    ingredients: { sunflower: 1 },
+    sellPrice: 38,
+    bloomPoints: 6,
+    description: 'Soothing chamomile tea sweetened with golden wildflower honey.',
+  },
+  honey_berries: {
+    id: 'honey_berries',
+    name: 'Honey Glazed Summer Berries',
+    ingredients: { strawberry: 2 },
+    sellPrice: 46,
+    bloomPoints: 7,
+    description: 'Fresh sweet strawberries glazed in thick golden honey.',
+  },
 };
 
 export const RECIPE_IDS: readonly RecipeId[] = [
@@ -387,7 +407,70 @@ export const RECIPE_IDS: readonly RecipeId[] = [
   'salad',
   'pumpkin_pie',
   'fish_stew',
+  'honey_tea',
+  'honey_berries',
 ];
+
+export interface OutfitDef {
+  readonly id: OutfitId;
+  readonly name: string;
+  readonly description: string;
+  readonly shirtHex: string;
+  readonly overallsHex: string;
+  readonly hatHex: string;
+}
+
+export const OUTFITS: Readonly<Record<OutfitId, OutfitDef>> = {
+  classic: {
+    id: 'classic',
+    name: 'Classic Denim',
+    description: 'Classic rustic farming denim overalls.',
+    shirtHex: '#F2C9A0',
+    overallsHex: '#7FA7D6',
+    hatHex: '#E8C872',
+  },
+  gardener: {
+    id: 'gardener',
+    name: 'Garden Meadow Apron',
+    description: 'Earthy green botanical apron tailored for planting.',
+    shirtHex: '#FFF1DC',
+    overallsHex: '#588157',
+    hatHex: '#DDA15E',
+  },
+  autumn_sweater: {
+    id: 'autumn_sweater',
+    name: 'Autumn Knit Sweater',
+    description: 'Warm, cozy crimson knit wool sweater.',
+    shirtHex: '#E9C46A',
+    overallsHex: '#BC4749',
+    hatHex: '#F4A261',
+  },
+  floral_apron: {
+    id: 'floral_apron',
+    name: 'Floral Sun Dress',
+    description: 'Cheerful golden floral dress adorned with sunny petals.',
+    shirtHex: '#FCE7A8',
+    overallsHex: '#F7B267',
+    hatHex: '#F25C54',
+  },
+};
+
+export const OUTFIT_IDS = Object.keys(OUTFITS) as readonly OutfitId[];
+
+export interface HatDef {
+  readonly id: HatId;
+  readonly name: string;
+  readonly icon: string;
+}
+
+export const HATS: Readonly<Record<HatId, HatDef>> = {
+  straw_hat: { id: 'straw_hat', name: 'Woven Straw Sunhat', icon: '👒' },
+  flower_crown: { id: 'flower_crown', name: 'Wildflower Crown', icon: '👑' },
+  bandana: { id: 'bandana', name: 'Meadow Bandana', icon: '🧣' },
+  none: { id: 'none', name: 'No Hat', icon: '👤' },
+};
+
+export const HAT_IDS = Object.keys(HATS) as readonly HatId[];
 
 export interface FishDef {
   readonly id: FishId;

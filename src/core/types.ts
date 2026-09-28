@@ -9,10 +9,22 @@
 
 export type CropId = 'carrot' | 'tomato' | 'strawberry' | 'sunflower' | 'pumpkin';
 export type ToolId = 'hoe' | 'seeds' | 'water' | 'basket';
-export type DecorationId = 'bench' | 'flowerbed' | 'birdbath' | 'windchime' | 'gnome';
+export type DecorationId =
+  | 'bench'
+  | 'flowerbed'
+  | 'birdbath'
+  | 'windchime'
+  | 'gnome'
+  | 'beehive'
+  | 'campfire'
+  | 'picnic_mat'
+  | 'hammock';
 export type VisitorId = 'hazel' | 'pip' | 'moss';
 export type Weather = 'clear' | 'rain';
 export type CropStage = 'seed' | 'sprout' | 'growing' | 'ripe';
+
+export type OutfitId = 'classic' | 'gardener' | 'autumn_sweater' | 'floral_apron';
+export type HatId = 'straw_hat' | 'flower_crown' | 'bandana' | 'none';
 
 /** Integer cell coordinate on the island's walk grid. */
 export interface Cell {
@@ -62,7 +74,9 @@ export type RecipeId =
   | 'fish_stew'
   | 'berry_tart'
   | 'mushroom_soup'
-  | 'apple_pie';
+  | 'apple_pie'
+  | 'honey_tea'
+  | 'honey_berries';
 export type FishId = 'koi' | 'goldfish' | 'perch' | 'sparklefish';
 export type ForageId = 'mushroom' | 'berry' | 'seashell' | 'wildflower';
 export type FruitId = 'apple' | 'cherry' | 'citrus';
@@ -94,6 +108,7 @@ export interface Stats {
   readonly catPets?: number;
   readonly foraged?: number;
   readonly visitorGifts?: number;
+  readonly honeyCollected?: number;
 }
 
 export interface GameState {
@@ -109,6 +124,10 @@ export interface GameState {
   readonly fishInventory?: Readonly<Partial<Record<FishId, number>>>;
   readonly forageInventory?: Readonly<Partial<Record<ForageId, number>>>;
   readonly fruitInventory?: Readonly<Partial<Record<FruitId, number>>>;
+  readonly honeyJars?: number;
+  readonly campfireLit?: boolean;
+  readonly currentOutfit?: OutfitId;
+  readonly currentHat?: HatId;
   readonly forageNodes?: readonly ForageNode[];
   readonly isletUnlocked?: boolean;
   readonly pets?: readonly PetId[];
@@ -208,6 +227,11 @@ export type GameEvent =
         | 'sit_table'
         | 'take_nap';
     }
+  | { readonly type: 'outfit-changed'; readonly outfit: OutfitId }
+  | { readonly type: 'hat-changed'; readonly hat: HatId }
+  | { readonly type: 'honey-harvested'; readonly count: number }
+  | { readonly type: 'campfire-toggled'; readonly lit: boolean }
+  | { readonly type: 'hammock-rested' }
   | { readonly type: 'pet-cat'; readonly happiness: number }
   | { readonly type: 'achievement-unlocked'; readonly achievement: string }
   | { readonly type: 'journal-entry'; readonly entry: string }

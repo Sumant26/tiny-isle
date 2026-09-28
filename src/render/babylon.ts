@@ -27,6 +27,7 @@ export { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder';
 export { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
 export { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 export { CreateTorus } from '@babylonjs/core/Meshes/Builders/torusBuilder';
+export type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 export { Mesh } from '@babylonjs/core/Meshes/mesh';
 export { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 export { Scene } from '@babylonjs/core/scene';

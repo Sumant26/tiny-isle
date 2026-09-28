@@ -6,7 +6,7 @@ import { createStore } from '../state/store';
 import { makeState, unlockAll, withProduce } from '../test/fixtures';
 import { createHotbar } from './Hotbar';
 import { createHud } from './Hud';
-import { createDayOverlay, createFallback, createHelpPanel } from './Overlays';
+import { createActionPrompt, createDayOverlay, createFallback, createHelpPanel } from './Overlays';
 import { createSettingsPanel } from './SettingsPanel';
 import { createShopPanel } from './ShopPanel';
 import { createToasts } from './Toasts';
@@ -235,5 +235,60 @@ describe('Overlays', () => {
 
   it('fallback explains the problem', () => {
     expect(createFallback('No WebGL').getAttribute('role')).toBe('alert');
+  });
+});
+
+describe('ActionPrompt', () => {
+  it('shows a message with an action, runs it once and hides', () => {
+    const prompt = createActionPrompt();
+    const onAction = vi.fn();
+    expect(prompt.isOpen).toBe(false);
+    prompt.show('A new version is ready.', 'Update', onAction);
+    expect(prompt.el.hidden).toBe(false);
+    expect(q(prompt.el, 'prompt-text').textContent).toBe('A new version is ready.');
+    expect(q(prompt.el, 'prompt-action').textContent).toBe('Update');
+    q(prompt.el, 'prompt-action').click();
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(prompt.isOpen).toBe(false);
+    prompt.dispose();
+  });
+
+  it('can be dismissed without acting', () => {
+    const prompt = createActionPrompt();
+    const onAction = vi.fn();
+    prompt.show('Hi', 'Go', onAction);
+    prompt.el.querySelector<HTMLButtonElement>('[aria-label="Dismiss"]')!.click();
+    expect(prompt.el.hidden).toBe(true);
+    expect(onAction).not.toHaveBeenCalled();
+    prompt.show('Hi', 'Go', onAction);
+    prompt.hide();
+    expect(prompt.isOpen).toBe(false);
+  });
+});
+
+describe('SettingsPanel crash reports', () => {
+  it('hides the toggle when crash reporting is not available', () => {
+    const panel = createSettingsPanel(storeWith(), {
+      onExport: vi.fn(),
+      onImport: vi.fn(),
+      onNewGame: vi.fn(),
+    });
+    expect(panel.el.querySelector('[data-testid="crash-reports"]')).toBeNull();
+  });
+
+  it('shows the current choice and reports changes', () => {
+    const onChange = vi.fn();
+    const panel = createSettingsPanel(storeWith(), {
+      onExport: vi.fn(),
+      onImport: vi.fn(),
+      onNewGame: vi.fn(),
+      crashReports: { isEnabled: () => true, onChange },
+    });
+    const toggle = q(panel.el, 'crash-reports') as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+    expect(onChange).toHaveBeenCalledWith(false);
+    expect(panel.el.textContent).toContain('No saves or personal data');
   });
 });

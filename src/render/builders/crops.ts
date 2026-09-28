@@ -190,8 +190,13 @@ const GROWING: Record<CropId, Builder> = {
 
 /** Builds the visual for a crop at a growth stage, under a fresh node. */
 export const buildCrop = (ctx: SceneContext, crop: CropId, stage: CropStage): TransformNode => {
-  const node = new TransformNode(`crop_${crop}_${stage}`, ctx.scene);
+  const node = ctx.model(`crop/${crop}/${stage}`, () => buildProceduralCrop(ctx, crop, stage));
   node.metadata = { crop, stage };
+  return node;
+};
+
+const buildProceduralCrop = (ctx: SceneContext, crop: CropId, stage: CropStage): TransformNode => {
+  const node = new TransformNode(`crop_${crop}_${stage}`, ctx.scene);
   switch (stage) {
     case 'seed':
       seedMound(ctx, node);

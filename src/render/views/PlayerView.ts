@@ -36,7 +36,7 @@ export class PlayerView implements Mover {
     this.farmer.root.position.set(w.x, GROUND_Y, w.z);
     this.cat.position.set(w.x - 0.6, GROUND_Y, w.z + 0.4);
     this.observer = ctx.scene.onBeforeRenderObservable.add(() => {
-      this.tick(Math.min(ctx.engine.getDeltaTime() / 1000, 0.1));
+      this.tick(ctx.frameDelta());
     });
   }
 

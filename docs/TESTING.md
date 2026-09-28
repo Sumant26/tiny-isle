@@ -39,3 +39,23 @@ Coverage thresholds are enforced in `vitest.config.ts` (95% lines/statements/fun
 - Pure logic: build a state with fixtures, call the rule, assert on `state` and `events`.
 - A new view: create it with `createTestContext()` and a real store, dispatch actions, assert on scene nodes.
 - A new UI component: add `// @vitest-environment jsdom` at the top and query by `data-testid`.
+
+## Visual tests
+
+`e2e/visual.spec.ts` compares screenshots against baselines in `e2e/__screenshots__/`. The page is opened with `?visual`, which:
+
+- freezes time (every per-frame animation holds still),
+- seeds all randomness (flower placement, butterflies, weather),
+- starts from a fixed new island and blocks web fonts.
+
+So the same code always draws the same pixels, and any change larger than 1% of pixels fails CI with a diff image (download the **visual-diffs** artifact).
+
+Rendering and fonts differ between operating systems, so baselines are only generated in CI's Docker image (`mcr.microsoft.com/playwright`). To create or refresh them after an intentional visual change:
+
+**Actions → Update visual baselines → Run workflow** (choose your branch). It commits the new PNGs to that branch; review them in the PR.
+
+Running visual tests locally on Windows or macOS creates `*-win32.png`/`*-darwin.png` baselines for your machine only; they're git-ignored.
+
+## Bundle-size budget
+
+`npm run size` (after `npm run build`) checks each chunk's gzipped size against `.size-limit.json`. CI fails if a chunk grows past its limit and prints a size table in the job summary. If growth is intended, raise the limit in the same PR and explain why.

@@ -136,31 +136,41 @@ const buildTree = (ctx: SceneContext, root: TransformNode): TransformNode => {
   const node = new TransformNode('tree', scene);
   node.parent = root;
   at(node, LAYOUT.tree);
-  const o = { parent: node };
-  shape(
-    CreateCylinder('trunk', { diameterTop: 0.3, diameterBottom: 0.48, height: 1.5 }, scene),
-    PALETTE.bark,
-    o,
-  ).position.y = 0.75;
-  const blobs: [number, number, number, number, string][] = [
-    [0, 2.1, 0, 2.0, PALETTE.leaf],
-    [-0.6, 1.75, 0.25, 1.3, PALETTE.leaf],
-    [0.6, 1.85, 0.2, 1.3, PALETTE.leafMid],
-    [0.1, 2.65, 0.2, 1.1, PALETTE.leafLight],
-  ];
-  for (const [x, y, z, d, hex] of blobs)
-    shape(CreateSphere('leaves', { diameter: d, segments: 14 }, scene), hex, o).position.set(
-      x,
-      y,
-      z,
-    );
-  for (const [x, y, z] of [
-    [0.55, 2.1, 0.8],
-    [-0.7, 1.75, 0.7],
-    [0.2, 1.6, 0.9],
-  ] as const) {
-    shape(CreateSphere('apple', { diameter: 0.2 }, scene), PALETTE.tomato, o).position.set(x, y, z);
-  }
+  // A glTF model from public/models can replace the procedural tree (see docs/ASSETS.md).
+  const model = ctx.model('prop/tree', () => {
+    const proc = new TransformNode('treeProcedural', scene);
+    const o = { parent: proc };
+    shape(
+      CreateCylinder('trunk', { diameterTop: 0.3, diameterBottom: 0.48, height: 1.5 }, scene),
+      PALETTE.bark,
+      o,
+    ).position.y = 0.75;
+    const blobs: [number, number, number, number, string][] = [
+      [0, 2.1, 0, 2.0, PALETTE.leaf],
+      [-0.6, 1.75, 0.25, 1.3, PALETTE.leaf],
+      [0.6, 1.85, 0.2, 1.3, PALETTE.leafMid],
+      [0.1, 2.65, 0.2, 1.1, PALETTE.leafLight],
+    ];
+    for (const [x, y, z, d, hex] of blobs)
+      shape(CreateSphere('leaves', { diameter: d, segments: 14 }, scene), hex, o).position.set(
+        x,
+        y,
+        z,
+      );
+    for (const [x, y, z] of [
+      [0.55, 2.1, 0.8],
+      [-0.7, 1.75, 0.7],
+      [0.2, 1.6, 0.9],
+    ] as const) {
+      shape(CreateSphere('apple', { diameter: 0.2 }, scene), PALETTE.tomato, o).position.set(
+        x,
+        y,
+        z,
+      );
+    }
+    return proc;
+  });
+  model.parent = node;
   return node;
 };
 
@@ -171,51 +181,56 @@ const buildMarket = (ctx: SceneContext, root: TransformNode): void => {
   const c = rectCenterWorld(LAYOUT.market);
   node.position.set(c.x, GROUND_Y, c.z);
   node.rotation.y = -Math.PI / 4;
-  const o = { parent: node };
-  for (const [x, z] of [
-    [-0.9, -0.45],
-    [0.9, -0.45],
-    [-0.9, 0.45],
-    [0.9, 0.45],
-  ] as const) {
+  const model = ctx.model('prop/market', () => {
+    const proc = new TransformNode('marketProcedural', scene);
+    const o = { parent: proc };
+    for (const [x, z] of [
+      [-0.9, -0.45],
+      [0.9, -0.45],
+      [-0.9, 0.45],
+      [0.9, 0.45],
+    ] as const) {
+      shape(
+        CreateCylinder('post', { diameter: 0.11, height: 1.8 }, scene),
+        PALETTE.woodDark,
+        o,
+      ).position.set(x, 0.9, z);
+    }
     shape(
-      CreateCylinder('post', { diameter: 0.11, height: 1.8 }, scene),
-      PALETTE.woodDark,
+      CreateBox('counter', { width: 2, depth: 1, height: 0.65 }, scene),
+      PALETTE.wood,
       o,
-    ).position.set(x, 0.9, z);
-  }
-  shape(
-    CreateBox('counter', { width: 2, depth: 1, height: 0.65 }, scene),
-    PALETTE.wood,
-    o,
-  ).position.y = 0.33;
-  for (let i = 0; i < 5; i++) {
-    const s = shape(
-      CreateBox('awning', { width: 0.42, depth: 1.3, height: 0.07 }, scene),
-      i % 2 ? PALETTE.awningLight : PALETTE.roof,
-      o,
-    );
-    s.position.set(-0.84 + i * 0.42, 1.85, 0.05);
-    s.rotation.x = 0.15;
-  }
-  const crates: [string, number][] = [
-    [PALETTE.tomato, -0.55],
-    [PALETTE.carrot, 0],
-    [PALETTE.petal, 0.55],
-  ];
-  for (const [hex, x] of crates) {
-    shape(
-      CreateBox('crate', { width: 0.45, depth: 0.38, height: 0.18 }, scene),
-      PALETTE.woodLight,
-      o,
-    ).position.set(x, 0.74, 0.2);
-    for (let i = 0; i < 3; i++)
-      shape(CreateSphere('goods', { diameter: 0.15 }, scene), hex, o).position.set(
-        x - 0.12 + i * 0.12,
-        0.88,
-        0.2,
+    ).position.y = 0.33;
+    for (let i = 0; i < 5; i++) {
+      const s = shape(
+        CreateBox('awning', { width: 0.42, depth: 1.3, height: 0.07 }, scene),
+        i % 2 ? PALETTE.awningLight : PALETTE.roof,
+        o,
       );
-  }
+      s.position.set(-0.84 + i * 0.42, 1.85, 0.05);
+      s.rotation.x = 0.15;
+    }
+    const crates: [string, number][] = [
+      [PALETTE.tomato, -0.55],
+      [PALETTE.carrot, 0],
+      [PALETTE.petal, 0.55],
+    ];
+    for (const [hex, x] of crates) {
+      shape(
+        CreateBox('crate', { width: 0.45, depth: 0.38, height: 0.18 }, scene),
+        PALETTE.woodLight,
+        o,
+      ).position.set(x, 0.74, 0.2);
+      for (let i = 0; i < 3; i++)
+        shape(CreateSphere('goods', { diameter: 0.15 }, scene), hex, o).position.set(
+          x - 0.12 + i * 0.12,
+          0.88,
+          0.2,
+        );
+    }
+    return proc;
+  });
+  model.parent = node;
 };
 
 const buildLantern = (

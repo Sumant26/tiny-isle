@@ -12,6 +12,8 @@ export interface DebugHook {
   clickTile(index: number): Promise<string>;
   /** CSS-pixel position of a cell on the canvas, so e2e tests can click the real 3D scene. */
   projectCell(cell: Cell): { x: number; y: number } | null;
+  /** Finishes pending tweens (pop-ins, fades) and renders one frame. For screenshot tests. */
+  settle(seconds?: number): void;
 }
 
 /**
@@ -41,6 +43,10 @@ export const installDebugHook = (
       );
       const scale = engine.getHardwareScalingLevel();
       return { x: p.x * scale, y: p.y * scale };
+    },
+    settle: (seconds = 2) => {
+      game.ctx.tweener.update(seconds);
+      game.ctx.scene.render();
     },
   };
   target.__tinyIsle = hook;

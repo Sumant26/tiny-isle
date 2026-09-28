@@ -1,0 +1,3 @@
+{
+  "$comment": "Map model slots to .glb files in this folder. Empty = use the built-in procedural models. See docs/ASSETS.md."
+}

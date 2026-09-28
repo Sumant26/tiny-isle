@@ -64,7 +64,7 @@ export class AmbientView {
       store.select(selectWeather, (w) => this.setRain(w === 'rain')),
     );
     this.observer = ctx.scene.onBeforeRenderObservable.add(() => {
-      this.tick(Math.min(ctx.engine.getDeltaTime() / 1000, 0.1));
+      this.tick(ctx.frameDelta());
     });
   }
 

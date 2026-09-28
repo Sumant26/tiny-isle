@@ -1,0 +1,20 @@
+name: Feature idea
+description: Suggest something cozy to add
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would it make the game better?
+  - type: checkboxes
+    id: cozy
+    attributes:
+      label: Cozy check
+      options:
+        - label: It doesn't add pressure, timers or ways to fail

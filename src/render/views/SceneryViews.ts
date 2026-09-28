@@ -76,7 +76,7 @@ export class VisitorView {
       (id) => this.sync(id),
     );
     this.observer = ctx.scene.onBeforeRenderObservable.add(() => {
-      this.time += Math.min(ctx.engine.getDeltaTime() / 1000, 0.1);
+      this.time += ctx.frameDelta();
       const marker = this.node?.getChildren((n) => n.name === 'marker', false)[0] as
         TransformNode | undefined;
       if (marker) marker.position.y = 1.9 + Math.sin(this.time * 3) * 0.08;

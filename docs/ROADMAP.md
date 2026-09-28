@@ -17,8 +17,8 @@
 
 ## v0.4 — Polish and reach
 
-- Proper low-poly glTF models (Blender / CC0 packs)
-- PWA: offline play and "install to home screen"
+- Proper low-poly glTF models from Kenney/Quaternius/Blender (pipeline is ready: docs/ASSETS.md)
+- Model slots for the farmer (with a watering-can attachment point) and the cottage (with a named window)
 - Gamepad support
 - Localisation
 - Photo mode

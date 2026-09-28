@@ -106,3 +106,49 @@ export const createDayOverlay = (
 
 export const createFallback = (message: string): HTMLElement =>
   h('div', { class: 'fallback', role: 'alert' }, h('h1', {}, 'Tiny Isle'), h('p', {}, message));
+
+export interface ActionPrompt extends Component {
+  /** Shows a message with one action button until the player acts or dismisses it. */
+  show(text: string, actionLabel: string, onAction: () => void): void;
+  hide(): void;
+  readonly isOpen: boolean;
+}
+
+export const createActionPrompt = (): ActionPrompt => {
+  const text = h('span', { 'data-testid': 'prompt-text' });
+  const action = h('button', { class: 'btn btn-primary', 'data-testid': 'prompt-action' });
+  const dismiss = h('button', { class: 'icon-btn', 'aria-label': 'Dismiss' }, '✕');
+  const el = h(
+    'div',
+    { class: 'action-prompt', role: 'status', hidden: true, 'data-testid': 'prompt' },
+    text,
+    action,
+    dismiss,
+  );
+  let handler: () => void = () => undefined;
+  let isOpen = false;
+  const hide = (): void => {
+    isOpen = false;
+    el.hidden = true;
+  };
+  action.addEventListener('click', () => {
+    hide();
+    handler();
+  });
+  dismiss.addEventListener('click', hide);
+  return {
+    el,
+    show: (message, label, onAction) => {
+      text.textContent = message;
+      action.textContent = label;
+      handler = onAction;
+      isOpen = true;
+      el.hidden = false;
+    },
+    hide,
+    get isOpen() {
+      return isOpen;
+    },
+    dispose: () => undefined,
+  };
+};

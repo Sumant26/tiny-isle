@@ -48,3 +48,28 @@ describe('createSceneContext', () => {
     expect(value).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('frozen time and models', () => {
+  it('frameDelta is 0 when time is frozen, so animations hold still', () => {
+    const frozen = createSceneContext(new NullEngine(), {
+      shadows: false,
+      glow: false,
+      frozenTime: true,
+    });
+    expect(frozen.frameDelta()).toBe(0);
+    let value = -1;
+    frozen.tweener.tween({ duration: 1, onUpdate: (t) => (value = t) });
+    frozen.scene.onBeforeRenderObservable.notifyObservers(frozen.scene);
+    expect(value).toBe(0);
+    const live = createSceneContext(new NullEngine(), { shadows: false, glow: false });
+    expect(live.frameDelta()).toBeGreaterThanOrEqual(0);
+    expect(live.frameDelta()).toBeLessThanOrEqual(0.1);
+  });
+
+  it('model() falls back to procedural builds by default', () => {
+    const ctx = createSceneContext(new NullEngine(), { shadows: false, glow: false });
+    expect(ctx.models.size).toBe(0);
+    const box = CreateBox('fallback', {}, ctx.scene);
+    expect(ctx.model('prop/tree', () => box)).toBe(box);
+  });
+});

@@ -18,6 +18,7 @@ describe('mountUI', () => {
     });
     expect(root.querySelector('.hud')).not.toBeNull();
     expect(root.querySelector('.hotbar')).not.toBeNull();
+    expect(root.contains(ui.prompt.el)).toBe(true);
     ui.shop.open();
     ui.settings.toggle();
     ui.help.show();

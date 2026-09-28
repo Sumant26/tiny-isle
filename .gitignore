@@ -11,3 +11,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Visual baselines are generated on Linux in CI; ignore local Windows/macOS ones.
+e2e/__screenshots__/*-win32.png
+e2e/__screenshots__/*-darwin.png

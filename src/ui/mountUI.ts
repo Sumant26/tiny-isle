@@ -1,7 +1,14 @@
 import type { Store } from '../state/store';
 import { createHotbar } from './Hotbar';
 import { createHud } from './Hud';
-import { createDayOverlay, createHelpPanel, type DayOverlay, type HelpPanel } from './Overlays';
+import {
+  type ActionPrompt,
+  createActionPrompt,
+  createDayOverlay,
+  createHelpPanel,
+  type DayOverlay,
+  type HelpPanel,
+} from './Overlays';
 import { createSettingsPanel, type SettingsHandlers, type SettingsPanel } from './SettingsPanel';
 import { createShopPanel, type ShopPanel } from './ShopPanel';
 import { createToasts, type Toasts } from './Toasts';
@@ -20,6 +27,7 @@ export interface GameUI {
   readonly toasts: Toasts;
   readonly visitor: VisitorCard;
   readonly dayOverlay: DayOverlay;
+  readonly prompt: ActionPrompt;
   /** Closes the top-most open panel. Returns false if nothing was open. */
   closeTop(): boolean;
   dispose(): void;
@@ -32,13 +40,14 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
   const toasts = createToasts(store);
   const visitor = createVisitorCard(store);
   const dayOverlay = createDayOverlay();
+  const prompt = createActionPrompt();
   const hud = createHud(store, {
     onSettings: () => settings.toggle(),
     onHelp: () => help.show(),
   });
   const hotbar = createHotbar(store, { onSleep: handlers.onSleep, onShop: handlers.onShop });
 
-  const parts = [hud, hotbar, toasts, visitor, shop, settings, help, dayOverlay];
+  const parts = [hud, hotbar, toasts, prompt, visitor, shop, settings, help, dayOverlay];
   root.append(...parts.map((p) => p.el));
 
   return {
@@ -48,6 +57,7 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
     toasts,
     visitor,
     dayOverlay,
+    prompt,
     closeTop: () => {
       if (help.isOpen) help.hide();
       else if (settings.isOpen) settings.close();

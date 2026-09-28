@@ -7,6 +7,11 @@ export interface SettingsHandlers {
   onExport: () => void;
   onImport: (file: File) => void;
   onNewGame: () => void;
+  /** Present only when the build supports crash reporting. */
+  crashReports?: {
+    isEnabled: () => boolean;
+    onChange: (enabled: boolean) => void;
+  };
 }
 
 export interface SettingsPanel extends Component {
@@ -32,6 +37,27 @@ export const createSettingsPanel = (store: Store, handlers: SettingsHandlers): S
   volume.addEventListener('input', () =>
     store.dispatch(actions.updateSettings({ volume: Number(volume.value) / 100 })),
   );
+  const crash = handlers.crashReports;
+  const crashToggle = h('input', {
+    type: 'checkbox',
+    id: 'opt-crash',
+    'data-testid': 'crash-reports',
+  });
+  crashToggle.checked = crash?.isEnabled() ?? false;
+  crashToggle.addEventListener('change', () => crash?.onChange(crashToggle.checked));
+  const crashRow = crash
+    ? h(
+        'label',
+        { class: 'row', for: 'opt-crash' },
+        h(
+          'span',
+          { class: 'row-text' },
+          h('span', {}, 'Share crash reports'),
+          h('small', {}, 'Anonymous error details only. No saves or personal data.'),
+        ),
+        crashToggle,
+      )
+    : null;
   const file = h('input', {
     type: 'file',
     accept: 'application/json,.json',
@@ -102,6 +128,7 @@ export const createSettingsPanel = (store: Store, handlers: SettingsHandlers): S
           ),
         ),
       ),
+      crashRow,
       h('div', { class: 'row' }, h('span', {}, 'Start over'), newGame),
       file,
     ),

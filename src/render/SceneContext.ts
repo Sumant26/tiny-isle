@@ -13,6 +13,7 @@ import {
   type TransformNode,
   Vector3,
 } from './babylon';
+import { ModelLibrary } from './models/ModelLibrary';
 import { PALETTE } from './palette';
 import { Tweener } from './tween';
 
@@ -33,6 +34,11 @@ export interface SceneContext {
   readonly sun: DirectionalLight;
   readonly shadows: ShadowGenerator | null;
   readonly glow: GlowLayer | null;
+  /** Seconds since the last frame, clamped. Returns 0 when time is frozen (visual tests). */
+  frameDelta: () => number;
+  readonly models: ModelLibrary;
+  /** A loaded glTF model for `key` if the manifest has one, else the procedural `fallback`. */
+  model: (key: string, fallback: () => TransformNode) => TransformNode;
   /** Shared matte material per colour. Reused across meshes to keep draw state small. */
   material: (hex: string, emissive?: string) => StandardMaterial;
   /** Applies material, parent and shadow settings to a freshly built mesh. */
@@ -43,13 +49,22 @@ export interface SceneContext {
 export interface SceneContextOptions {
   shadows?: boolean;
   glow?: boolean;
+  /** Freeze all per-frame animation so screenshots are pixel-stable. */
+  frozenTime?: boolean;
+  /** Preloaded glTF models; defaults to none (all procedural). */
+  models?: ModelLibrary;
 }
 
 export const color = (hex: string): Color3 => Color3.FromHexString(hex);
 
 export const createSceneContext = (
   engine: AbstractEngine,
-  { shadows = true, glow = true }: SceneContextOptions = {},
+  {
+    shadows = true,
+    glow = true,
+    frozenTime = false,
+    models = new ModelLibrary(),
+  }: SceneContextOptions = {},
 ): SceneContext => {
   const scene = new Scene(engine);
   scene.clearColor = Color4.FromHexString(`${PALETTE.skyDay}FF`);
@@ -84,10 +99,11 @@ export const createSceneContext = (
     glowLayer.intensity = 0.6;
   }
 
+  // Clamp so a background tab doesn't fast-forward animations on return.
+  const frameDelta = frozenTime ? () => 0 : () => Math.min(engine.getDeltaTime() / 1000, 0.1);
   const tweener = new Tweener();
   scene.onBeforeRenderObservable.add(() => {
-    // Clamp so a background tab doesn't fast-forward animations on return.
-    tweener.update(Math.min(engine.getDeltaTime() / 1000, 0.1));
+    tweener.update(frameDelta());
   });
 
   const materials = new Map<string, StandardMaterial>();
@@ -117,6 +133,12 @@ export const createSceneContext = (
     return mesh;
   };
 
+  const model = (key: string, fallback: () => TransformNode): TransformNode =>
+    models.create(key, fallback, (mesh) => {
+      mesh.receiveShadows = true;
+      shadowGen?.addShadowCaster(mesh);
+    });
+
   return {
     engine,
     scene,
@@ -125,6 +147,9 @@ export const createSceneContext = (
     sun,
     shadows: shadowGen,
     glow: glowLayer,
+    frameDelta,
+    models,
+    model,
     material,
     shape,
     dispose: () => {

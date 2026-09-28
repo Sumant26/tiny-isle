@@ -11,6 +11,8 @@ import { createFakeAudioContext } from '../test/fakeAudio';
 import { makeState } from '../test/fixtures';
 import { createGame, type Game, HELP_SEEN_KEY } from './Game';
 import { installDebugHook } from './debugHook';
+import { createErrorReporter, CRASH_REPORTS_KEY } from './errorReporting';
+import { createSceneContext } from '../render/SceneContext';
 
 let game: Game | null = null;
 
@@ -197,6 +199,69 @@ describe('createGame', () => {
   });
 });
 
+describe('createGame options', () => {
+  it('uses a pre-built scene context when given one', () => {
+    const uiRoot = document.createElement('div');
+    document.body.append(uiRoot);
+    const ctx = createSceneContext(new NullEngine(), {
+      shadows: false,
+      glow: false,
+      frozenTime: true,
+    });
+    game = createGame({ engine: ctx.engine, ctx, canvas: null, uiRoot });
+    expect(game.ctx).toBe(ctx);
+  });
+
+  it('wires the crash-report toggle to the error reporter', async () => {
+    const uiRoot = document.createElement('div');
+    document.body.append(uiRoot);
+    const storage = createMemoryStorage();
+    const sdk = {
+      init: vi.fn(),
+      captureException: vi.fn(() => ''),
+      close: vi.fn(() => Promise.resolve(true)),
+    };
+    const errorReporter = createErrorReporter({
+      dsn: 'dsn',
+      storage,
+      load: () => Promise.resolve(sdk),
+    });
+    game = createGame({
+      engine: new NullEngine(),
+      canvas: null,
+      uiRoot,
+      storage,
+      quality: 'low',
+      errorReporter,
+    });
+    const toggle = document.querySelector<HTMLInputElement>('[data-testid="crash-reports"]')!;
+    expect(toggle.checked).toBe(false);
+    toggle.checked = true;
+    toggle.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(sdk.init).toHaveBeenCalled());
+    expect(storage.getItem(CRASH_REPORTS_KEY)).toBe('1');
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Crash reports are on'));
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Crash reports are off'));
+  });
+
+  it('hides the toggle when the build has no DSN', () => {
+    const uiRoot = document.createElement('div');
+    document.body.append(uiRoot);
+    const storage = createMemoryStorage();
+    game = createGame({
+      engine: new NullEngine(),
+      canvas: null,
+      uiRoot,
+      storage,
+      quality: 'low',
+      errorReporter: createErrorReporter({ dsn: undefined, storage }),
+    });
+    expect(document.querySelector('[data-testid="crash-reports"]')).toBeNull();
+  });
+});
+
 describe('installDebugHook', () => {
   it('exposes the game and click helpers', async () => {
     const { game } = setup();
@@ -209,6 +274,12 @@ describe('installDebugHook', () => {
     const p = hook.projectCell({ x: 7, z: 7 });
     expect(p).not.toBeNull();
     expect(Number.isFinite(p!.x)).toBe(true);
+    // settle() finishes pending tweens and draws a frame.
+    let t = 0;
+    game.ctx.tweener.tween({ duration: 1, onUpdate: (k) => (t = k) });
+    hook.settle();
+    expect(t).toBe(1);
+    hook.settle(0.5);
     game.ctx.scene.activeCamera = null;
     expect(hook.projectCell({ x: 7, z: 7 })).toBeNull();
   });

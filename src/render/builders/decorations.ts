@@ -87,8 +87,11 @@ const BUILDERS: Record<DecorationId, Builder> = {
 };
 
 export const buildDecoration = (ctx: SceneContext, id: DecorationId): TransformNode => {
-  const root = new TransformNode(`decoration_${id}`, ctx.scene);
+  const root = ctx.model(`decoration/${id}`, () => {
+    const proc = new TransformNode(`decoration_${id}`, ctx.scene);
+    BUILDERS[id](ctx, proc);
+    return proc;
+  });
   root.metadata = { decoration: id };
-  BUILDERS[id](ctx, root);
   return root;
 };

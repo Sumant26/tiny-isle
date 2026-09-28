@@ -29,7 +29,21 @@ flowchart LR
 | Input / audio | `src/input`, `src/audio` | core         | Pure mappings plus thin browser bindings.                                |
 | App           | `src/app`                | everything   | `createGame` is the composition root that wires the layers.              |
 
-`src/main.ts` only checks WebGL support, creates the Babylon `Engine`, calls `createGame`, and starts the render loop.
+`src/main.ts` checks WebGL support, resolves boot options (`app/bootOptions.ts`), creates the Babylon `Engine` and scene, preloads any custom models, calls `createGame`, starts the render loop, and registers the service worker.
+
+## Optional features and how they stay cheap
+
+| Feature                     | Where                                                                              | Cost when unused                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Offline / installable (PWA) | `vite.config.ts` (vite-plugin-pwa), `app/pwa.ts`, `ui/Overlays.ts` (update prompt) | None; the service worker precaches the core game only                          |
+| Crash reports (Sentry)      | `app/errorReporting.ts`, Settings toggle                                           | SDK is a separate lazy chunk, never downloaded without a DSN and player opt-in |
+| Custom glTF models          | `render/models/*`, `public/models/manifest.json`                                   | glTF loader chunk is only downloaded when the manifest lists a model           |
+
+`build/babylonChunks.ts` walks the module graph so Babylon code the game uses goes in the `babylon` chunk, while engine code only the glTF loader needs goes in the lazy `gltf` chunk. The bundle-size budget in `.size-limit.json` keeps both honest.
+
+## Models
+
+Builders call `ctx.model(slot, buildProcedural)`. If `public/models/manifest.json` maps that slot to a loaded `.glb`, the library returns an instance of it (with shadows applied); otherwise the procedural builder runs. See [ASSETS.md](ASSETS.md).
 
 ## Data flow for one click
 
@@ -54,4 +68,5 @@ flowchart LR
 - Fence posts, path stones and flowers are GPU instances.
 - Shadows and glow are disabled on small screens (`quality: 'low'`).
 - Per-frame work is limited to small `onBeforeRender` loops (bobbing, butterflies, rain) and the tween runner.
-- Babylon is split into its own long-cached chunk.
+- Babylon is split into its own long-cached chunk; optional features load lazily.
+- In visual-test mode `ctx.frameDelta()` returns 0, freezing every animation for pixel-stable screenshots.

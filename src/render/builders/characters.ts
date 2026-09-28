@@ -67,7 +67,10 @@ export const buildFarmer = (ctx: SceneContext): Farmer => {
   return { root, can };
 };
 
-export const buildCat = (ctx: SceneContext): TransformNode => {
+export const buildCat = (ctx: SceneContext): TransformNode =>
+  ctx.model('pet/cat', () => buildProceduralCat(ctx));
+
+const buildProceduralCat = (ctx: SceneContext): TransformNode => {
   const { scene, shape } = ctx;
   const root = new TransformNode('cat', scene);
   const o = { parent: root };
@@ -208,8 +211,11 @@ const VISITOR_BUILDERS: Record<VisitorId, (ctx: SceneContext, root: TransformNod
 };
 
 export const buildVisitor = (ctx: SceneContext, id: VisitorId): TransformNode => {
-  const root = new TransformNode(`visitor_${id}`, ctx.scene);
+  const root = ctx.model(`visitor/${id}`, () => {
+    const proc = new TransformNode(`visitor_${id}`, ctx.scene);
+    VISITOR_BUILDERS[id](ctx, proc);
+    return proc;
+  });
   root.metadata = { visitor: id };
-  VISITOR_BUILDERS[id](ctx, root);
   return root;
 };

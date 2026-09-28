@@ -19,7 +19,12 @@ Recommended VS Code extensions are listed in `.vscode/extensions.json`.
    - `feat: add rain sounds`
    - `fix(ui): keep hotbar on screen on small phones`
    - `test(core): cover tomato regrowth`
-5. Open a pull request. The PR title must also be a conventional commit.
+5. Open a pull request. The PR title must also be a conventional commit (it becomes the changelog entry when squash-merged).
+6. If your change alters how the game looks on purpose, run **Actions → Update visual baselines** on your branch and review the new screenshots.
+
+## Releasing
+
+You don't bump versions by hand. release-please keeps a release PR open on `main`; merging it bumps `package.json`, writes `CHANGELOG.md`, tags the release and publishes it on GitHub.
 
 ## Where things go
 

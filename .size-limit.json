@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Babylon.js engine (babylon chunk)",
+    "path": "dist/assets/babylon-*.js",
+    "limit": "420 kB",
+    "gzip": true
+  },
+  {
+    "name": "Game code (entry chunk)",
+    "path": "dist/assets/index-*.js",
+    "limit": "40 kB",
+    "gzip": true
+  },
+  {
+    "name": "Styles",
+    "path": "dist/assets/index-*.css",
+    "limit": "4 kB",
+    "gzip": true
+  },
+  {
+    "name": "glTF loader (lazy, only with custom models)",
+    "path": "dist/assets/gltf-*.js",
+    "limit": "500 kB",
+    "gzip": true
+  },
+  {
+    "name": "Sentry (lazy, only after opting in)",
+    "path": "dist/assets/sentry-*.js",
+    "limit": "160 kB",
+    "gzip": true
+  }
+]

@@ -14,6 +14,7 @@ import { reducer } from '../state/reducer';
 import { selectSettings } from '../state/selectors';
 import { createStore, type Store } from '../state/store';
 import { mountUI, type GameUI } from '../ui/mountUI';
+import type { ErrorReporter } from './errorReporting';
 import { InteractionController } from './InteractionController';
 
 export const HELP_SEEN_KEY = 'tiny-isle/help-seen';
@@ -26,9 +27,15 @@ export interface GameOptions {
   sound?: SoundEngine;
   /** Graphics extras (shadows, glow). Off for headless tests. */
   quality?: 'high' | 'low';
+  /** Stops per-frame animation (for screenshot tests). */
+  frozenTime?: boolean;
   seed?: number;
   random?: () => number;
   keyboardTarget?: Window | HTMLElement;
+  /** Opt-in crash reporting; the settings toggle appears only when it's available. */
+  errorReporter?: ErrorReporter;
+  /** A pre-built scene (e.g. with glTF models already loaded). Overrides quality/frozenTime. */
+  ctx?: SceneContext;
 }
 
 export interface Game {
@@ -57,9 +64,12 @@ export const createGame = ({
   storage = createMemoryStorage(),
   sound = createSoundEngine(),
   quality = 'high',
+  frozenTime = false,
   seed,
   random = Math.random,
   keyboardTarget = window,
+  errorReporter,
+  ctx: providedCtx,
 }: GameOptions): Game => {
   const saves = createSaveManager({ storage });
   const loaded = saves.load();
@@ -67,7 +77,13 @@ export const createGame = ({
   const initialState = loaded?.ok ? loaded.value : createInitialState(seed);
 
   const store = createStore({ reducer, initialState });
-  const ctx = createSceneContext(engine, { shadows: quality === 'high', glow: quality === 'high' });
+  const ctx =
+    providedCtx ??
+    createSceneContext(engine, {
+      shadows: quality === 'high',
+      glow: quality === 'high',
+      frozenTime,
+    });
   const renderer = createGameRenderer(ctx, store, { canvas, random });
 
   let sleeping = false;
@@ -109,6 +125,21 @@ export const createGame = ({
     },
     onNewGame: () => newGame(),
     onHelpDismissed: () => storage.setItem(HELP_SEEN_KEY, '1'),
+    ...(errorReporter?.available
+      ? {
+          crashReports: {
+            isEnabled: () => errorReporter.enabled,
+            onChange: (on: boolean) => {
+              void errorReporter.setEnabled(on).then(() => {
+                ui.toasts.show(
+                  on ? 'Thanks! Crash reports are on.' : 'Crash reports are off.',
+                  'info',
+                );
+              });
+            },
+          },
+        }
+      : {}),
   });
 
   const controller = new InteractionController({

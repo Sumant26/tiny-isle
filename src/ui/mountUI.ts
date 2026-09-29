@@ -1,8 +1,9 @@
 import type { Store } from '../state/store';
+import type { GameState } from '../core/types';
 import { CookDialog } from './CookDialog';
 import { FishDialog } from './FishDialog';
 import { createHotbar } from './Hotbar';
-import { createHud } from './Hud';
+import { createHud, type HudComponent } from './Hud';
 import { JournalDialog } from './JournalDialog';
 import {
   type ActionPrompt,
@@ -16,22 +17,28 @@ import { PhotoMode } from './PhotoMode';
 import { createSettingsPanel, type SettingsHandlers, type SettingsPanel } from './SettingsPanel';
 import { createShopPanel, type ShopPanel } from './ShopPanel';
 import { createToasts, type Toasts } from './Toasts';
+import { TravelDialog } from './TravelDialog';
 import { createVisitorCard, type VisitorCard } from './VisitorCard';
 
 export interface UiHandlers extends SettingsHandlers {
   onSleep: () => void;
   onShop: () => void;
+  onHouse?: () => void;
+  onTravel?: (state: GameState, islandName: string) => void;
+  onReturnHome?: () => void;
   onHelpDismissed?: () => void;
   canvas?: HTMLCanvasElement | null;
 }
 
 export interface GameUI {
+  readonly hud: HudComponent;
   readonly shop: ShopPanel;
   readonly settings: SettingsPanel;
   readonly help: HelpPanel;
   readonly journal: JournalDialog;
   readonly cook: CookDialog;
   readonly fish: FishDialog;
+  readonly travel: TravelDialog;
   readonly photo: PhotoMode;
   readonly toasts: Toasts;
   readonly visitor: VisitorCard;
@@ -50,8 +57,23 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
   const cook = new CookDialog(store, () => cook.hide(), handlers.onSleep);
   const fish = new FishDialog(store, () => fish.hide());
   const photo = new PhotoMode(root, handlers.canvas ?? null, () => undefined);
-
   const toasts = createToasts(store);
+
+  const travel = new TravelDialog(store, () => travel.hide(), {
+    onVisit: (state, islandName) => {
+      handlers.onTravel?.(state, islandName);
+      hud.setVisiting(islandName, () => {
+        handlers.onReturnHome?.();
+        hud.setVisiting(null);
+      });
+    },
+    onReturnHome: () => {
+      handlers.onReturnHome?.();
+      hud.setVisiting(null);
+    },
+    onToast: (msg, tone) => toasts.show(msg, tone),
+  });
+
   const visitor = createVisitorCard(store);
   const dayOverlay = createDayOverlay();
   const prompt = createActionPrompt();
@@ -63,6 +85,7 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
     if (journal.isOpen && journal !== except) journal.hide();
     if (cook.isOpen && cook !== except) cook.hide();
     if (fish.isOpen && fish !== except) fish.hide();
+    if (travel.isOpen && travel !== except) travel.hide();
   };
 
   const origShopOpen = shop.open.bind(shop);
@@ -89,6 +112,12 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
     origJournalShow();
   };
 
+  const origTravelShow = travel.show.bind(travel);
+  travel.show = () => {
+    closeAll(travel);
+    origTravelShow();
+  };
+
   const hud = createHud(store, {
     onSettings: () => {
       if (settings.isOpen) {
@@ -110,12 +139,22 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
       closeAll(photo);
       photo.enter();
     },
+    onTravel: () => {
+      closeAll(travel);
+      travel.show();
+    },
   });
+
   const hotbar = createHotbar(store, {
     onSleep: handlers.onSleep,
     onShop: () => {
       closeAll(shop);
       handlers.onShop();
+    },
+    onHouse: () => {
+      closeAll(cook);
+      if (handlers.onHouse) handlers.onHouse();
+      else cook.show();
     },
   });
 
@@ -124,15 +163,18 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
   root.appendChild(journal.root);
   root.appendChild(cook.root);
   root.appendChild(fish.root);
+  root.appendChild(travel.root);
   root.appendChild(photo.root);
 
   return {
+    hud,
     shop,
     settings,
     help,
     journal,
     cook,
     fish,
+    travel,
     photo,
     toasts,
     visitor,
@@ -146,6 +188,7 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
       else if (journal.isOpen) journal.hide();
       else if (cook.isOpen) cook.hide();
       else if (fish.isOpen) fish.hide();
+      else if (travel.isOpen) travel.hide();
       else return false;
       return true;
     },
@@ -157,6 +200,7 @@ export const mountUI = (root: HTMLElement, store: Store, handlers: UiHandlers): 
       journal.root.remove();
       cook.root.remove();
       fish.root.remove();
+      travel.root.remove();
       photo.root.remove();
     },
   };

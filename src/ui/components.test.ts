@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { serialize } from '../persistence/saveManager';
 import { actions } from '../state/actions';
 import { reducer } from '../state/reducer';
 import { createStore } from '../state/store';
@@ -493,5 +494,66 @@ describe('JournalDialog and PhotoMode', () => {
     photo.root.querySelector<HTMLButtonElement>('[data-testid="photo-exit"]')?.click();
     expect(photo.isActive).toBe(false);
     expect(onToggle).toHaveBeenCalledWith(false);
+  });
+});
+
+describe('TravelDialog', () => {
+  it('shows featured neighbor islands and triggers visit', async () => {
+    const { TravelDialog } = await import('./TravelDialog');
+    const store = storeWith();
+    const onClose = vi.fn();
+    const onVisit = vi.fn();
+    const onReturnHome = vi.fn();
+    const onToast = vi.fn();
+
+    const dialog = new TravelDialog(store, onClose, { onVisit, onReturnHome, onToast });
+    dialog.show();
+    expect(dialog.isOpen).toBe(true);
+
+    const visitHazelBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="visit-hazel"]',
+    );
+    expect(visitHazelBtn).not.toBeNull();
+    visitHazelBtn?.click();
+
+    expect(onVisit).toHaveBeenCalled();
+    dialog.hide();
+    expect(dialog.isOpen).toBe(false);
+  });
+
+  it('handles custom friend code tab and copy button', async () => {
+    const { TravelDialog } = await import('./TravelDialog');
+    const store = storeWith();
+    const onClose = vi.fn();
+    const onVisit = vi.fn();
+    const onReturnHome = vi.fn();
+    const onToast = vi.fn();
+
+    const dialog = new TravelDialog(store, onClose, { onVisit, onReturnHome, onToast });
+    dialog.show();
+
+    // Switch tab to custom code
+    const customTabBtn = dialog.root.querySelector<HTMLButtonElement>('[data-tab="custom"]');
+    customTabBtn?.click();
+
+    const copyBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="copy-island-code"]',
+    );
+    expect(copyBtn).not.toBeNull();
+    copyBtn?.click();
+    expect(onToast).toHaveBeenCalled();
+
+    // Test entering friend code
+    const input = dialog.root.querySelector<HTMLTextAreaElement>(
+      '[data-testid="friend-code-input"]',
+    );
+    const visitCodeBtn = dialog.root.querySelector<HTMLButtonElement>(
+      '[data-testid="visit-code-btn"]',
+    );
+    if (input && visitCodeBtn) {
+      input.value = serialize(makeState({ day: 15, season: 'summer' }));
+      visitCodeBtn.click();
+      expect(onVisit).toHaveBeenCalled();
+    }
   });
 });

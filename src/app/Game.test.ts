@@ -126,6 +126,11 @@ describe('createGame', () => {
     expect(game.ui.shop.isOpen).toBe(true);
     press('b');
     expect(game.ui.shop.isOpen).toBe(false);
+    press('h');
+    await advance(game.ctx, 5, 0.1);
+    expect(game.ui.cook.isOpen).toBe(true);
+    press('Escape');
+    expect(game.ui.cook.isOpen).toBe(false);
     press('z');
     await advance(game.ctx, 5, 0.1);
     await vi.waitFor(() => expect(game.store.getState().day).toBe(2), { timeout: 3000 });

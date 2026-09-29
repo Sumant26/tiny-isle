@@ -23,6 +23,13 @@ describe('world layout', () => {
     expect(cellToTileIndex(LAYOUT.playerStart)).toBe(-1);
   });
 
+  it('supports expanded plot heights', () => {
+    // Row 5 (z = 8) is outside 4-row plot
+    expect(cellToTileIndex({ x: 4, z: 8 }, 4)).toBe(-1);
+    // Row 5 is valid when plot is expanded to height 5
+    expect(cellToTileIndex({ x: 4, z: 8 }, 5)).toBe(24);
+  });
+
   it('round-trips cell <-> world coordinates', () => {
     const c = { x: 3, z: 11 };
     const w = cellToWorld(c);

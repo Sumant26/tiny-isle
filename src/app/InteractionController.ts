@@ -107,8 +107,22 @@ export class InteractionController {
     if (!path) return 'unreachable';
     if (!(await this.walkPath(path, signal))) return 'cancelled';
 
-    const index = cellToTileIndex(cell);
+    const plotHeight = store.getState().plot.height;
+    const index = cellToTileIndex(cell, plotHeight);
     return index >= 0 ? this.useTile(index, signal) : 'walked';
+  }
+
+  async goToCottage(signal: AbortSignal = this.begin()): Promise<ClickResult> {
+    const { store } = this.deps;
+    const player = store.getState().player;
+    const path = findPathToNeighbor(player, { x: 3, z: 2 }, this.walkable);
+    if (!path) {
+      this.deps.onCottage?.();
+      return 'shop';
+    }
+    if (!(await this.walkPath(path, signal))) return 'cancelled';
+    this.deps.onCottage?.();
+    return 'shop';
   }
 
   async goToMarket(signal: AbortSignal = this.begin()): Promise<ClickResult> {
@@ -132,7 +146,8 @@ export class InteractionController {
   /** Use the selected tool on the tile the player is standing on (keyboard). */
   async useHere(): Promise<ClickResult> {
     const signal = this.begin();
-    const index = cellToTileIndex(this.deps.store.getState().player);
+    const state = this.deps.store.getState();
+    const index = cellToTileIndex(state.player, state.plot.height);
     return index >= 0 ? this.useTile(index, signal) : 'ignored';
   }
 }

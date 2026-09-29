@@ -46,8 +46,13 @@ export class PlotView {
       this.sync(i, tile, false);
     });
     this.unsubscribe = store.select(selectTiles, (next, prev) => {
+      while (this.visuals.length < next.length) {
+        this.visuals.push(this.createTile(this.visuals.length));
+      }
       next.forEach((tile, i) => {
-        if (tile !== prev[i]) this.sync(i, tile, true);
+        if (tile !== prev[i] || i >= prev.length) {
+          this.sync(i, tile, true);
+        }
       });
     });
   }

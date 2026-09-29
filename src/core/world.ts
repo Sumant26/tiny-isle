@@ -87,9 +87,9 @@ export const isWalkable = (c: Cell): boolean =>
   !(c.x === LAYOUT.lantern.x && c.z === LAYOUT.lantern.z);
 
 /** Plot tile index for a world cell, or -1 when the cell is not on the plot. */
-export const cellToTileIndex = (c: Cell): number => {
+export const cellToTileIndex = (c: Cell, plotHeight = 4): number => {
   const p = LAYOUT.plot;
-  if (!inRect(c, p)) return -1;
+  if (c.x < p.x || c.x >= p.x + p.w || c.z < p.z || c.z >= p.z + plotHeight) return -1;
   return (c.z - p.z) * p.w + (c.x - p.x);
 };
 

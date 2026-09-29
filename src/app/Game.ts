@@ -2,7 +2,7 @@ import { soundForEvent } from '../audio/sounds';
 import { createSoundEngine, type SoundEngine } from '../audio/SoundEngine';
 import { FISH } from '../core/config';
 import { createInitialState } from '../core/initialState';
-import type { FishId } from '../core/types';
+import type { FishId, GameState } from '../core/types';
 import { cellToTileIndex } from '../core/world';
 import { bindGamepad } from '../input/gamepad';
 import { bindKeyboard, cameraRelativeStep, type Command } from '../input/keyboard';
@@ -121,10 +121,40 @@ export const createGame = ({
     renderer.lighting.set('day');
   };
 
+  let homeBackupState: GameState | null = null;
+  let isVisiting = false;
+
+  const visitFriendIsland = (friendState: GameState, islandName: string): void => {
+    controller.cancel();
+    if (!isVisiting) {
+      homeBackupState = store.getState();
+      isVisiting = true;
+    }
+    sound.play('water');
+    store.dispatch(actions.load(friendState));
+    renderer.lighting.set('day');
+    ui.toasts.show(`✈️ Arrived at ${islandName}! Welcome!`, 'good');
+  };
+
+  const returnHome = (): void => {
+    controller.cancel();
+    if (homeBackupState) {
+      sound.play('water');
+      store.dispatch(actions.load(homeBackupState));
+      homeBackupState = null;
+    }
+    isVisiting = false;
+    renderer.lighting.set('day');
+    ui.toasts.show('🏡 Welcome back to your home island!', 'good');
+  };
+
   const ui = mountUI(uiRoot, store, {
     canvas,
     onSleep: () => void sleep(),
     onShop: () => void controller.goToMarket(),
+    onHouse: () => void controller.goToCottage(),
+    onTravel: (friendState, islandName) => visitFriendIsland(friendState, islandName),
+    onReturnHome: () => returnHome(),
     onJournal: () => ui.journal.show(),
     onCook: () => ui.cook.show(),
     onFish: () => void triggerFishing(),
@@ -202,8 +232,8 @@ export const createGame = ({
         renderer.plot.setHoveredTile(null);
         return;
       }
-      const idx = cellToTileIndex(cell);
       const s = store.getState();
+      const idx = cellToTileIndex(cell, s.plot.height);
       renderer.plot.setHoveredTile(idx >= 0 ? idx : null, s.selectedTool, s.selectedSeed);
     },
     onDoubleTap: () => {
@@ -237,6 +267,10 @@ export const createGame = ({
       case 'shop':
         if (ui.shop.isOpen) ui.shop.close();
         else void controller.goToMarket();
+        break;
+      case 'house':
+        if (ui.cook.isOpen) ui.cook.hide();
+        else void controller.goToCottage();
         break;
       case 'mute':
         store.dispatch(actions.updateSettings({ muted: !store.getState().settings.muted }));

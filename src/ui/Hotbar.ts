@@ -9,7 +9,7 @@ const TOOLS: ToolId[] = ['hoe', 'seeds', 'water', 'basket'];
 
 export const createHotbar = (
   store: Store,
-  handlers: { onSleep: () => void; onShop: () => void },
+  handlers: { onSleep: () => void; onShop: () => void; onHouse?: () => void },
 ): Component => {
   const buttons = new Map<ToolId, HTMLButtonElement>();
   const seedIcon = h('span', { class: 'seed-icon' });
@@ -55,6 +55,17 @@ export const createHotbar = (
     },
     '🏪',
   );
+  const house = h(
+    'button',
+    {
+      class: 'slot',
+      'aria-label': 'Go into house (H)',
+      title: 'Cozy House (H)',
+      'data-testid': 'house-button',
+      onclick: handlers.onHouse,
+    },
+    '🏡',
+  );
   const sleep = h(
     'button',
     {
@@ -74,6 +85,7 @@ export const createHotbar = (
     cycle,
     h('span', { class: 'divider' }),
     shop,
+    house,
     sleep,
   );
 

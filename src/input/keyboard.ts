@@ -7,6 +7,7 @@ export type Command =
   | { readonly type: 'use' }
   | { readonly type: 'sleep' }
   | { readonly type: 'shop' }
+  | { readonly type: 'house' }
   | { readonly type: 'mute' }
   | { readonly type: 'close' };
 
@@ -41,6 +42,8 @@ export const keyToCommand = (key: string): Command | null => {
       return { type: 'sleep' };
     case 'b':
       return { type: 'shop' };
+    case 'h':
+      return { type: 'house' };
     case 'm':
       return { type: 'mute' };
     case 'Escape':

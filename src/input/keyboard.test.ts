@@ -22,6 +22,7 @@ describe('keyToCommand', () => {
     ['Enter', { type: 'use' }],
     ['z', { type: 'sleep' }],
     ['b', { type: 'shop' }],
+    ['h', { type: 'house' }],
     ['m', { type: 'mute' }],
     ['Escape', { type: 'close' }],
   ])('maps %j', (key, command) => {

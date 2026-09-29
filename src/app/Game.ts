@@ -1,6 +1,6 @@
 import { soundForEvent } from '../audio/sounds';
 import { createSoundEngine, type SoundEngine } from '../audio/SoundEngine';
-import { FISH } from '../core/config';
+import { FISH, PETS } from '../core/config';
 import { createInitialState } from '../core/initialState';
 import type { FishId, GameState } from '../core/types';
 import { cellToTileIndex } from '../core/world';
@@ -210,6 +210,21 @@ export const createGame = ({
     onPetCat: () => {
       store.dispatch(actions.petCat());
       void renderer.player.petCatReact();
+      void renderer.pets.petReact('cat');
+    },
+    onPetPet: (petId) => {
+      store.dispatch(actions.interactPet(petId));
+      void renderer.pets.petReact(petId);
+      if (petId === 'cat') void renderer.player.petCatReact();
+    },
+    onHarvestOrchard: () => {
+      store.dispatch(actions.harvestOrchard());
+    },
+    onLockedIslet: () => {
+      ui.toasts.show(
+        '🌉 Restore the Footbridge in the Market Expansions to visit Orchard Islet! 🍎',
+        'gentle',
+      );
     },
   });
 
@@ -319,8 +334,17 @@ export const createGame = ({
     if (e.type === 'islet-unlocked') {
       ui.toasts.show('🌉 Footbridge restored! Orchard Islet unlocked! 🍎', 'good');
     }
+    if (e.type === 'orchard-harvested') {
+      ui.toasts.show(`🍎 Harvested sweet ${e.fruit} from the Orchard! (+${e.count})`, 'good');
+    }
     if (e.type === 'pet-adopted') {
       ui.toasts.show(`🐾 Welcomed your new pet ${e.pet} to the island! ❤️`, 'good');
+    }
+    if (e.type === 'pet-interacted') {
+      const def = PETS[e.pet];
+      ui.toasts.show(`🐾 Petted ${def.name}! ${def.sound}`, 'good');
+      void renderer.pets.petReact(e.pet);
+      if (e.pet === 'cat') void renderer.player.petCatReact();
     }
   });
 

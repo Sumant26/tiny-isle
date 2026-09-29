@@ -2,7 +2,7 @@ import type { Cell } from './types';
 
 export type WalkableFn = (cell: Cell) => boolean;
 
-const key = (c: Cell): number => c.z * 1024 + c.x;
+const key = (c: Cell): number => (c.z + 100) * 1000 + (c.x + 100);
 const manhattan = (a: Cell, b: Cell): number => Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
 const DIRS: readonly Cell[] = [
   { x: 1, z: 0 },

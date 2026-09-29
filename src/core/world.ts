@@ -10,7 +10,7 @@ import type { Cell } from './types';
 
 export const WORLD_SIZE = 15;
 export const CENTER = (WORLD_SIZE - 1) / 2;
-export const ISLAND_RADIUS = 7.2;
+export const ISLAND_RADIUS = 7.3;
 
 export interface Rect {
   readonly x: number;
@@ -56,6 +56,13 @@ export const LAYOUT = {
     wishing_well: { x: 2, z: 7 },
     greenhouse: { x: 3, z: 2 },
   },
+  bridge: { x: 13, z: 0, w: 4, d: 2 },
+  islet: { center: { x: 18, z: 0.5 }, radius: 3.2 },
+  orchardTrees: [
+    { name: 'appleTree', cell: { x: 17, z: 0 } },
+    { name: 'cherryTree', cell: { x: 19, z: 0 } },
+    { name: 'citrusTree', cell: { x: 18, z: 2 } },
+  ],
 } as const;
 
 export const inRect = (c: Cell, r: Rect): boolean =>
@@ -70,6 +77,13 @@ export const onIsland = (c: Cell): boolean =>
   c.z < WORLD_SIZE &&
   Math.hypot(c.x - CENTER, c.z - CENTER) <= ISLAND_RADIUS;
 
+export const isOnBridge = (c: Cell): boolean => c.x >= 12 && c.x <= 16 && c.z >= 0 && c.z <= 2;
+
+export const isOnIslet = (c: Cell): boolean =>
+  Math.hypot(c.x - LAYOUT.islet.center.x, c.z - LAYOUT.islet.center.z) <= LAYOUT.islet.radius;
+
+export const isBridgeOrIslet = (c: Cell): boolean => isOnBridge(c) || isOnIslet(c);
+
 /** Cells on the fence ring around the plot (excluding the gate opening). */
 export const isFence = (c: Cell): boolean => {
   const f = LAYOUT.fence;
@@ -80,8 +94,8 @@ export const isFence = (c: Cell): boolean => {
 
 const SOLID: readonly Rect[] = [LAYOUT.cottage, LAYOUT.pond, LAYOUT.tree, LAYOUT.market];
 
-export const isWalkable = (c: Cell): boolean =>
-  onIsland(c) &&
+export const isWalkable = (c: Cell, isletUnlocked = false): boolean =>
+  (onIsland(c) || (isletUnlocked && isBridgeOrIslet(c))) &&
   !isFence(c) &&
   !SOLID.some((r) => inRect(c, r)) &&
   !(c.x === LAYOUT.lantern.x && c.z === LAYOUT.lantern.z);

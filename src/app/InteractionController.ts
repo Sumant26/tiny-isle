@@ -1,18 +1,40 @@
 import { findPath, findPathToNeighbor, type WalkableFn } from '../core/pathfinding';
-import type { Cell, ToolId } from '../core/types';
-import { cellToTileIndex, inRect, isMarketCell, isWalkable, LAYOUT, sameCell } from '../core/world';
+import type { Cell, PetId, ToolId } from '../core/types';
+import {
+  cellToTileIndex,
+  inRect,
+  isBridgeOrIslet,
+  isMarketCell,
+  isWalkable,
+  LAYOUT,
+  sameCell,
+} from '../core/world';
 import type { Mover } from '../render/views/PlayerView';
 import { actions } from '../state/actions';
 import type { Store } from '../state/store';
 
 export type ClickResult =
-  'used' | 'walked' | 'shop' | 'visitor' | 'ignored' | 'cancelled' | 'unreachable';
+  | 'used'
+  | 'walked'
+  | 'shop'
+  | 'visitor'
+  | 'ignored'
+  | 'cancelled'
+  | 'unreachable'
+  | 'pet'
+  | 'harvest';
 
 const GESTURE: Record<ToolId, 'dig' | 'plant' | 'water' | 'pick'> = {
   hoe: 'dig',
   seeds: 'plant',
   water: 'water',
   basket: 'pick',
+};
+
+const PET_SPOTS: Record<Exclude<PetId, 'cat'>, Cell> = {
+  puppy: { x: 10, z: 9 },
+  bunny: { x: 12, z: 6 },
+  duckling: { x: 2, z: 8 },
 };
 
 export interface InteractionDeps {
@@ -24,6 +46,9 @@ export interface InteractionDeps {
   onCottage?: () => void;
   onPond?: () => void;
   onPetCat?: () => void;
+  onPetPet?: (pet: PetId) => void;
+  onHarvestOrchard?: () => void;
+  onLockedIslet?: () => void;
 }
 
 /**
@@ -32,10 +57,14 @@ export interface InteractionDeps {
  */
 export class InteractionController {
   private current: AbortController | null = null;
-  private readonly walkable: WalkableFn;
 
-  constructor(private readonly deps: InteractionDeps) {
-    this.walkable = deps.walkable ?? isWalkable;
+  constructor(private readonly deps: InteractionDeps) {}
+
+  private get walkable(): WalkableFn {
+    return (
+      this.deps.walkable ??
+      ((cell: Cell) => isWalkable(cell, this.deps.store.getState().isletUnlocked))
+    );
   }
 
   cancel(): void {
@@ -66,17 +95,49 @@ export class InteractionController {
   async clickCell(cell: Cell): Promise<ClickResult> {
     const signal = this.begin();
     const { store } = this.deps;
-    const player = store.getState().player;
+    const state = store.getState();
+    const player = state.player;
+    const plotHeight = state.plot.height;
+    const index = cellToTileIndex(cell, plotHeight);
+
+    // Farming on plot tiles has priority
+    if (index >= 0) {
+      if (!this.walkable(cell)) return 'ignored';
+      const path = findPath(player, cell, this.walkable);
+      if (!path) return 'unreachable';
+      if (!(await this.walkPath(path, signal))) return 'cancelled';
+      return this.useTile(index, signal);
+    }
 
     if (isMarketCell(cell)) return this.goToMarket(signal);
 
-    // Cottage Kitchen
+    // Cottage Kitchen / Cozy House
     if (inRect(cell, LAYOUT.cottage)) {
-      const path = findPathToNeighbor(player, cell, this.walkable);
+      const path =
+        findPath(player, { x: 4, z: 3 }, this.walkable) ??
+        findPathToNeighbor(player, cell, this.walkable);
       if (!path) return 'unreachable';
       if (!(await this.walkPath(path, signal))) return 'cancelled';
       this.deps.onCottage?.();
       return 'shop';
+    }
+
+    // Check Petting for adopted puppy, bunny, duckling or companion cat
+    const ownedPets = state.pets ?? ['cat'];
+    for (const petId of ownedPets) {
+      if (petId === 'cat') {
+        if (Math.hypot(cell.x - player.x, cell.z - player.z) <= 1.2) {
+          if (this.deps.onPetPet) this.deps.onPetPet('cat');
+          else this.deps.onPetCat?.();
+          return 'pet';
+        }
+      } else {
+        const spot = PET_SPOTS[petId];
+        if (Math.hypot(cell.x - spot.x, cell.z - spot.z) <= 1.5) {
+          if (this.deps.onPetPet) this.deps.onPetPet(petId);
+          return 'pet';
+        }
+      }
     }
 
     // Pond Fishing
@@ -88,12 +149,31 @@ export class InteractionController {
       return 'shop';
     }
 
-    // Pet the cat if clicked near player / cat
-    if (Math.hypot(cell.x - player.x, cell.z - player.z) <= 1.8) {
-      this.deps.onPetCat?.();
+    // Orchard Islet click
+    if (isBridgeOrIslet(cell)) {
+      if (!state.isletUnlocked) {
+        const path =
+          findPath(player, { x: 12, z: 1 }, this.walkable) ??
+          findPath(player, { x: 12, z: 2 }, this.walkable);
+        if (path) await this.walkPath(path, signal);
+        this.deps.onLockedIslet?.();
+        return 'ignored';
+      }
+
+      // Check clicking near orchard trees to harvest
+      const nearTree = LAYOUT.orchardTrees.some(
+        (t) => Math.hypot(cell.x - t.cell.x, cell.z - t.cell.z) <= 1.5,
+      );
+      if (nearTree && this.deps.onHarvestOrchard) {
+        const path = findPathToNeighbor(player, cell, this.walkable);
+        if (path && (await this.walkPath(path, signal))) {
+          this.deps.onHarvestOrchard();
+          return 'harvest';
+        }
+      }
     }
 
-    const visitor = store.getState().visitor;
+    const visitor = state.visitor;
     if (visitor && sameCell(cell, LAYOUT.visitorSpot)) {
       const path = findPathToNeighbor(player, cell, this.walkable);
       if (!path) return 'unreachable';
@@ -107,15 +187,15 @@ export class InteractionController {
     if (!path) return 'unreachable';
     if (!(await this.walkPath(path, signal))) return 'cancelled';
 
-    const plotHeight = store.getState().plot.height;
-    const index = cellToTileIndex(cell, plotHeight);
-    return index >= 0 ? this.useTile(index, signal) : 'walked';
+    return 'walked';
   }
 
   async goToCottage(signal: AbortSignal = this.begin()): Promise<ClickResult> {
     const { store } = this.deps;
     const player = store.getState().player;
-    const path = findPathToNeighbor(player, { x: 3, z: 2 }, this.walkable);
+    const path =
+      findPath(player, { x: 4, z: 3 }, this.walkable) ??
+      findPathToNeighbor(player, { x: 3, z: 2 }, this.walkable);
     if (!path) {
       this.deps.onCottage?.();
       return 'shop';

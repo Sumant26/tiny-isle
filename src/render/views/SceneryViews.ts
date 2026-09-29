@@ -306,6 +306,22 @@ export class PetsView {
     }
   }
 
+  /** Plays a happy jump reaction when the pet is petted. */
+  async petReact(pet: string): Promise<void> {
+    const node = this.petNodes.get(pet);
+    if (!node) return;
+    const origY = node.position.y;
+    await this.ctx.tweener.tween({
+      duration: 0.35,
+      ease: easings.outBack,
+      onUpdate: (k) => {
+        node.position.y = origY + Math.sin(k * Math.PI) * 0.3;
+        node.rotation.y += 0.25;
+      },
+    }).promise;
+    node.position.y = origY;
+  }
+
   dispose(): void {
     this.unsubscribe();
     this.ctx.scene.onBeforeRenderObservable.remove(this.observer);

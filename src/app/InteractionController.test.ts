@@ -152,4 +152,65 @@ describe('InteractionController', () => {
     expect(await c.goToMarket()).toBe('shop');
     expect(await c.clickCell(LAYOUT.visitorSpot)).toBe('visitor');
   });
+
+  it('pets other pets (puppy, bunny, duckling) when clicked near them', async () => {
+    const onPetPet = vi.fn();
+    const store = createStore({
+      reducer,
+      initialState: makeState({ pets: ['cat', 'puppy', 'bunny', 'duckling'] }),
+    });
+    const controller = new InteractionController({
+      store,
+      mover: fakeMover(),
+      onPetPet,
+    });
+
+    // Click near puppy (spot 10, 9)
+    expect(await controller.clickCell({ x: 10, z: 9 })).toBe('pet');
+    expect(onPetPet).toHaveBeenCalledWith('puppy');
+
+    // Click near bunny (spot 12, 6)
+    expect(await controller.clickCell({ x: 12, z: 6 })).toBe('pet');
+    expect(onPetPet).toHaveBeenCalledWith('bunny');
+
+    // Click near duckling (spot 2, 8)
+    expect(await controller.clickCell({ x: 2, z: 8 })).toBe('pet');
+    expect(onPetPet).toHaveBeenCalledWith('duckling');
+  });
+
+  it('walks to cottage doorstep and opens the cottage house', async () => {
+    const onCottage = vi.fn();
+    const store = createStore({ reducer, initialState: makeState() });
+    const controller = new InteractionController({
+      store,
+      mover: fakeMover(),
+      onCottage,
+    });
+
+    expect(await controller.goToCottage()).toBe('shop');
+    expect(onCottage).toHaveBeenCalled();
+    expect(await controller.clickCell(LAYOUT.cottage)).toBe('shop');
+  });
+
+  it('navigates to the Orchard Islet when unlocked and allows harvesting', async () => {
+    const onHarvestOrchard = vi.fn();
+    const onLockedIslet = vi.fn();
+    const store = createStore({
+      reducer,
+      initialState: makeState({ isletUnlocked: true }),
+    });
+    const controller = new InteractionController({
+      store,
+      mover: fakeMover(),
+      onHarvestOrchard,
+      onLockedIslet,
+    });
+
+    // Walk onto bridge
+    expect(await controller.clickCell({ x: 14, z: 0 })).toBe('walked');
+
+    // Harvest orchard tree on islet
+    expect(await controller.clickCell({ x: 17, z: 0 })).toBe('harvest');
+    expect(onHarvestOrchard).toHaveBeenCalled();
+  });
 });

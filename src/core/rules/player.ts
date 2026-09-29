@@ -4,7 +4,7 @@ import type { Cell, CropId, GameState, Outcome, Settings, ToolId } from '../type
 import { ok, reject } from './outcome';
 
 export const moveTo = (state: GameState, to: Cell): Outcome => {
-  if (!isWalkable(to)) return reject(state, 'blocked');
+  if (!isWalkable(to, state.isletUnlocked)) return reject(state, 'blocked');
   if (state.player.x === to.x && state.player.z === to.z) return ok(state);
   return ok({ ...state, player: { x: to.x, z: to.z } }, { type: 'moved', to });
 };

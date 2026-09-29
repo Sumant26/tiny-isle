@@ -74,4 +74,13 @@ describe('world layout', () => {
     expect(rectCenterWorld({ x: 7, z: 7, w: 1, d: 1 })).toEqual({ x: 0, z: 0 });
     expect(rectCenterWorld({ x: 7, z: 7, w: 2, d: 2 })).toEqual({ x: 0.5, z: 0.5 });
   });
+
+  it('supports bridge and islet walkability when islet is unlocked', () => {
+    const bridgeCell = { x: 14, z: 0 };
+    const isletCell = { x: 18, z: 1 };
+    expect(isWalkable(bridgeCell, false)).toBe(false);
+    expect(isWalkable(isletCell, false)).toBe(false);
+    expect(isWalkable(bridgeCell, true)).toBe(true);
+    expect(isWalkable(isletCell, true)).toBe(true);
+  });
 });

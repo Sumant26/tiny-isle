@@ -87,14 +87,13 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) first, then [docs/STATE.md](do
 
 ## Releases
 
-Releases are automated with **release-please**. Every push to `main` updates a "chore(main): release x.y.z" pull request whose version and changelog come from your commit messages (`feat:` → minor, `fix:` → patch while below 1.0). Merge it to tag the release, update `CHANGELOG.md` and publish a GitHub release. Pushes to `main` also deploy to GitHub Pages.
+Releases are automated with **release-please**. Every push to `main` updates a "chore(main): release x.y.z" pull request whose version and changelog come from your commit messages (`feat:` → minor, `fix:` → patch while below 1.0). Merge it to tag the release, update `CHANGELOG.md` and publish a GitHub release.
 
 ## One-time GitHub setup
 
-1. **Settings → Pages → Source: GitHub Actions** (deploys the game).
-2. **Settings → Actions → General → Workflow permissions:** "Read and write" and **Allow GitHub Actions to create and approve pull requests** (release-please and the baseline workflow need this).
-3. **Actions → Update visual baselines → Run workflow** once, to create the screenshot baselines.
-4. Optional: add a `SENTRY_DSN` repository secret to enable opt-in crash reports (see below).
+1. **Settings → Actions → General → Workflow permissions:** "Read and write" and **Allow GitHub Actions to create and approve pull requests** (release-please and the baseline workflow need this).
+2. **Actions → Update visual baselines → Run workflow** once, to create the screenshot baselines.
+3. Optional: add a `SENTRY_DSN` repository secret to enable opt-in crash reports (see below).
 
 ## Crash reports (opt-in)
 
@@ -102,7 +101,7 @@ If the build has a Sentry DSN (`VITE_SENTRY_DSN`, see `.env.example`), **Setting
 
 ## Deploying
 
-Pushes to `main` deploy to GitHub Pages (after the one-time setup above). The site is built with a relative base path, so `dist/` also works on itch.io or any static host.
+The game is deployed on **Vercel**. Every push to `main` automatically creates a production deployment, and pull requests get instant preview deployments.
 
 ## Contributing
 

@@ -26,8 +26,8 @@
     "size": "size-limit"
   },
   "dependencies": {
-    "@babylonjs/core": "9.28.0",
-    "@babylonjs/loaders": "9.28.0",
+    "@babylonjs/core": "9.29.0",
+    "@babylonjs/loaders": "9.29.0",
     "@sentry/browser": "11.0.0",
     "workbox-window": "7.4.1"
   },
